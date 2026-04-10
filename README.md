@@ -95,6 +95,8 @@ ANTHROPIC_FALLBACK_MODEL=claude-haiku-4-5
 # Local models (no key required)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODELS=qwen3.5:35b
+# if you have multiple ollama modelsyou can list them as well
+# OLLAMA_MODELS=qwen2.5:7b,llama3.1:8b,mistral:7b
 
 # Optional cloud providers
 OPENAI_API_KEY=
