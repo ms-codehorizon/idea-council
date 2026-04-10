@@ -1,0 +1,40 @@
+[project]
+name = "idea-council"
+version = "0.1.0"
+description = "Multi-provider LLM debate council for early product ideation"
+readme = "README.md"
+authors = [
+    { name = "ms-codehorizon", email = "263735383+ms-codehorizon@users.noreply.github.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.49.0",
+    "openai>=1.75.0",
+    "tavily-python>=0.5.0",
+    "typer>=0.15.0",
+    "rich>=13.9.0",
+    "python-dotenv>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-mock>=3.14.0",
+]
+
+[project.scripts]
+idea-council = "idea_council.cli.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/idea_council"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+]
