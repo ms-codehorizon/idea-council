@@ -1,7 +1,7 @@
 # idea-council — Product Requirements Document
 
 **Version:** 1.4  
-**Date:** 2026-04-09  
+**Date:** 2026-04-10  
 **Status:** Draft
 
 ---
@@ -123,6 +123,7 @@ Two modes are supported. The debate loop is identical in both — the only diffe
 - Each receives only the domain — no visibility into other seeds
 - The synthesizer selects the most distinctive or divergent seed to carry forward
 - The chosen seed and the rejected seeds are recorded in the session
+- After generation, the CLI shows the chosen seed and asks the user to confirm or replace it before the debate starts. If the user replaces it, `seed_mode` is set to `"user_provided"`
 
 ### 7.3 Role Assignment
 - Four roles are defined: **Optimist**, **Critic**, **Devil's Advocate**, **Domain Expert**
@@ -156,7 +157,7 @@ After each round, the synthesizer reads all debater responses and returns one of
 - `continue` — new arguments are still emerging, positions are still shifting
 - `done` — positions have stabilized, no substantively new arguments in the last round
 
-The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. The exit check is skipped after Round 1 — independent analysis has no reactions yet, so signaling `done` at that point would always be premature. The first check runs after Round 2. This adds one synthesizer API call per reaction round but produces the most honest exit — a judge watching a debate knows when it is over.
+The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. The exit check is skipped after Round 1 (independent analysis — no reactions yet) and Round 2 (first reaction — one exchange is not enough to judge convergence). The first check runs after Round 3 — minimum 2 reaction rounds must complete before the synthesizer can signal done. This adds one synthesizer API call per qualifying round but produces the most honest exit — a judge watching a debate knows when it is over.
 
 **Options considered and rejected:**
 
@@ -218,9 +219,11 @@ Market verification found moderate competition (score: X/10).
 ```
 
 **Reframe round (triggered by score 1–3 or user selecting [2]):**
-- Competitor hits are passed back to the full council
-- Each debater receives: the original seed idea + competitor list + prompt: "These already exist. What angle is missing? What did none of them solve?"
-- Council runs one additional round in parallel (no further exit-condition check)
+- Roles are reshuffled across providers (fresh rotation) so each model approaches the gap question from a new stance
+- The synthesizer generates a gap question: the original seed idea + competitor list + "These already exist. What angle is missing? What did none of them solve?"
+- A 2-line preview of the gap question is shown in the terminal after the new council lineup is printed
+- Council runs one additional round in parallel as a fresh independent analysis (`previous_responses=None` — no prior reactions carried in)
+- No further exit-condition check runs on the reframe round
 - The reframed direction produced by the council becomes the new seed
 - Session continues to synthesis with the reframe seed and all prior rounds preserved in the report
 
@@ -280,8 +283,8 @@ FinalReport
 │   ├── web_hits            (list[str] — URLs from Tavily web search)
 │   ├── competitor_hits     (list[str] — combined deduplicated URLs from all sources)
 │   └── skipped             (bool — true if neither search source was configured)
-├── pivot_triggered     (bool — true if reframe round ran)
-├── pivot_seed          (str | null — reframe prompt passed to council, if triggered)
+├── reframe_triggered   (bool — true if reframe round ran)
+├── reframe_seed        (str | null — reframe prompt passed to council, if triggered)
 ├── user_choice         (str | null — "proceed" | "reframe" | "abandon", set when score 4–6)
 └── provider_events     (list[str] — fallback/skip/repair events during session)
 
@@ -378,7 +381,7 @@ src/idea_council/
 │   ├── seed.py               # Parallel seed generation + selection
 │   ├── debate.py             # Round execution, fallback, repair
 │   ├── market.py             # GitHub + Tavily search and interpretation
-│   ├── synthesizer.py        # Exit check, pivot prompt, final report generation
+│   ├── synthesizer.py        # Exit check, reframe prompt, final report generation
 │   └── council.py            # Session orchestration
 ├── utils/                    # (reserved for future shared utilities)
 └── cli/

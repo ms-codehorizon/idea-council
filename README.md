@@ -21,9 +21,11 @@ Council lineup assigned  (roles shuffled randomly each run)
         ↓
 Round 1 — Independent analysis  (all debaters run in parallel, no visibility into each other)
         ↓
-Round 2+ — Reaction  (each debater sees others' responses, anonymized as Debater A/B/C)
+Round 2 — First reaction  (no exit check yet — one exchange is not enough to judge convergence)
+        ↓
+Round 3+ — Reaction  (each debater sees others' responses, anonymized as Debater A/B/C)
         ↓   ↑
-Synthesizer: continue or done?  (checked after Round 2+, not Round 1)
+Synthesizer: continue or done?  (first check after Round 3; minimum 2 reaction rounds always run)
         ↓
 Market verification  (GitHub + Tavily search, synthesizer scores openness 1–10)
         ↓
@@ -44,7 +46,7 @@ How would you like to start?
   [2] Mode B — provide your own seed idea
 ```
 
-- **Mode A** — provide a domain, the council generates and selects the seed idea
+- **Mode A** — provide a domain, the council generates and selects the seed idea. After generation, the CLI shows the chosen seed and asks you to confirm or replace it before the debate starts.
 - **Mode B** — enter a seed idea interactively (or pass `--seed` as a flag to skip the prompt)
 
 ---
@@ -214,7 +216,7 @@ Both scores use the same 1–10 scale where higher is always better:
 | 4–6 (moderate competition) | Pause — show findings, ask: proceed / reframe / abandon |
 | 1–3 (crowded) | Auto-reframe — council finds the gap without user input |
 
-When reframe is triggered, the same council receives the competitor list and is asked: *"These already exist. What angle is missing? What did none of them solve?"*
+When reframe is triggered, roles are reshuffled across providers and the new council receives the competitor list and is asked: *"These already exist. What angle is missing? What did none of them solve?"* The reframe lineup and a 2-line preview of the gap question are shown before the round starts.
 
 ---
 
@@ -245,8 +247,8 @@ FinalReport
 │   ├── github_hits
 │   ├── web_hits
 │   └── competitor_hits
-├── pivot_triggered
-├── pivot_seed
+├── reframe_triggered
+├── reframe_seed
 ├── user_choice         "proceed" | "reframe" | "abandon"
 └── provider_events     fallback / repair events
 ```

@@ -12,7 +12,7 @@ from idea_council.orchestrator.debate import run_round
 from idea_council.orchestrator.market import run_market_verification
 from idea_council.orchestrator.synthesizer import (
     check_exit,
-    generate_pivot_prompt,
+    generate_reframe_prompt,
     produce_final_report,
 )
 
@@ -65,8 +65,8 @@ def _save_report(report: FinalReport, output_dir: str, domain: str) -> str:
         "rejected_seeds": report.rejected_seeds,
         "rounds_completed": report.rounds_completed,
         "exit_reason": report.exit_reason,
-        "pivot_triggered": report.pivot_triggered,
-        "pivot_seed": report.pivot_seed,
+        "reframe_triggered": report.reframe_triggered,
+        "reframe_seed": report.reframe_seed,
         "user_choice": report.user_choice,
         "verdict": report.verdict,
         "opportunity_score": report.opportunity_score,
@@ -125,6 +125,7 @@ def run_session(
     on_debater_start=None,
     on_debater_done=None,
     on_seed_ready=None,
+    on_reframe_prompt_ready=None,
 ) -> tuple[FinalReport, str]:
     """
     Runs a full idea-council session.
@@ -158,6 +159,8 @@ def run_session(
         on_debater_start = _noop_role
     if on_debater_done is None:
         on_debater_done = _noop_role
+    if on_reframe_prompt_ready is None:
+        on_reframe_prompt_ready = _noop_one
     if on_seed_ready is None:
         def on_seed_ready(s):
             return s
@@ -231,10 +234,11 @@ def run_session(
             exclusions=exclusions,
         )
 
-        # Check exit condition only after reaction rounds (not after round 1)
-        # and only if there are more rounds allowed. Round 1 is independent
-        # analysis — nobody has reacted yet, so "done" would always be premature.
-        if round_number > 1 and round_number < max_rounds:
+        # Exit check: skip round 1 (independent, no reactions yet) and round 2
+        # (first reaction — one exchange is not enough to judge convergence).
+        # First possible check is round 3. Also skip on the final allowed round
+        # so the synthesizer only stops an in-progress debate, not a finished one.
+        if round_number > 2 and round_number < max_rounds:
             on_progress(f"Round {round_number} complete. Checking if debate should continue...")
             signal = check_exit(
                 rounds=rounds + [debate_round],
@@ -243,9 +247,12 @@ def run_session(
             )
             debate_round.synthesizer_signal = signal
             on_progress(f"Round {round_number} complete. Synthesizer: {signal}")
-        elif round_number == 1:
+        elif round_number <= 2:
             debate_round.synthesizer_signal = "not_checked"
-            on_progress(f"Round {round_number} complete. Moving to reaction round...")
+            if round_number == 1:
+                on_progress(f"Round {round_number} complete. Moving to reaction rounds...")
+            else:
+                on_progress(f"Round {round_number} complete. Continuing debate...")
         else:
             debate_round.synthesizer_signal = "not_checked"
             on_progress(f"Round {round_number} complete. Max rounds reached.")
@@ -275,38 +282,43 @@ def run_session(
 
     # Step 5: Act on market_openness
     user_choice = None
-    pivot_triggered = False
-    pivot_seed = None
+    reframe_triggered = False
+    reframe_seed = None
 
     if market and not market.skipped and market.market_openness is not None:
         score = market.market_openness
 
         if score <= 3:
-            # Auto-reframe: market is crowded, council finds the gap
-            pivot_triggered = True
-            on_reframe_started(role_assignments)
-            pivot_prompt = generate_pivot_prompt(
+            # Auto-reframe: market is crowded, council finds the gap.
+            # Rotate roles so each provider approaches the gap question fresh.
+            reframe_triggered = True
+            reframe_assignment = assign_roles(debaters)
+            reframe_role_assignments = describe_assignments(reframe_assignment)
+            reframe_role_assignments["synthesizer"] = {"provider": synthesizer.provider, "model": synthesizer.model}
+            on_reframe_started(reframe_role_assignments)
+            reframe_prompt = generate_reframe_prompt(
                 seed_idea=chosen_seed,
                 competitor_hits=market.competitor_hits,
                 synthesizer=synthesizer,
                 max_tokens=settings.max_tokens_per_call,
             )
-            pivot_round = run_round(
+            on_reframe_prompt_ready(reframe_prompt)
+            reframe_round = run_round(
                 round_number=len(rounds) + 1,
-                assignment=assignment,
-                seed_idea=pivot_prompt,
+                assignment=reframe_assignment,
+                seed_idea=reframe_prompt,
                 fallback=fallback,
                 max_tokens=settings.max_tokens_per_call,
                 provider_events=provider_events,
-                previous_responses=previous_responses,
+                previous_responses=None,
                 on_debater_start=on_debater_start,
                 on_debater_done=on_debater_done,
                 user_context=user_context,
                 exclusions=exclusions,
             )
-            pivot_round.synthesizer_signal = "not_checked"
-            rounds.append(pivot_round)
-            pivot_seed = pivot_prompt
+            reframe_round.synthesizer_signal = "not_checked"
+            rounds.append(reframe_round)
+            reframe_seed = reframe_prompt
 
         elif score <= 6:
             # Ask user what to do — moderate competition
@@ -333,8 +345,8 @@ def run_session(
                     kill_conditions=[],
                     what_must_be_true=[],
                     market=market,
-                    pivot_triggered=False,
-                    pivot_seed=None,
+                    reframe_triggered=False,
+                    reframe_seed=None,
                     user_choice="abandon",
                     provider_events=provider_events,
                 )
@@ -342,35 +354,40 @@ def run_session(
                 return partial_report, filepath
 
             elif user_choice == "reframe":
-                pivot_triggered = True
-                on_reframe_started(role_assignments)
-                pivot_prompt = generate_pivot_prompt(
+                # Rotate roles so providers bring fresh stances to the gap question.
+                reframe_triggered = True
+                reframe_assignment = assign_roles(debaters)
+                reframe_role_assignments = describe_assignments(reframe_assignment)
+                reframe_role_assignments["synthesizer"] = {"provider": synthesizer.provider, "model": synthesizer.model}
+                on_reframe_started(reframe_role_assignments)
+                reframe_prompt = generate_reframe_prompt(
                     seed_idea=chosen_seed,
                     competitor_hits=market.competitor_hits,
                     synthesizer=synthesizer,
                     max_tokens=settings.max_tokens_per_call,
                 )
-                pivot_round = run_round(
+                on_reframe_prompt_ready(reframe_prompt)
+                reframe_round = run_round(
                     round_number=len(rounds) + 1,
-                    assignment=assignment,
-                    seed_idea=pivot_prompt,
+                    assignment=reframe_assignment,
+                    seed_idea=reframe_prompt,
                     fallback=fallback,
                     max_tokens=settings.max_tokens_per_call,
                     provider_events=provider_events,
-                    previous_responses=previous_responses,
+                    previous_responses=None,
                     on_debater_start=on_debater_start,
                     on_debater_done=on_debater_done,
                     user_context=user_context,
                     exclusions=exclusions,
                 )
-                pivot_round.synthesizer_signal = "not_checked"
-                rounds.append(pivot_round)
-                pivot_seed = pivot_prompt
+                reframe_round.synthesizer_signal = "not_checked"
+                rounds.append(reframe_round)
+                reframe_seed = reframe_prompt
 
     # Step 6: Final synthesis
     on_progress("Producing final report...")
     synthesis = produce_final_report(
-        seed_idea=pivot_seed or chosen_seed,
+        seed_idea=reframe_seed or chosen_seed,
         rounds=rounds,
         role_assignments=role_assignments,
         market=market,
@@ -397,8 +414,8 @@ def run_session(
         kill_conditions=synthesis["kill_conditions"],
         what_must_be_true=synthesis["what_must_be_true"],
         market=market,
-        pivot_triggered=pivot_triggered,
-        pivot_seed=pivot_seed,
+        reframe_triggered=reframe_triggered,
+        reframe_seed=reframe_seed,
         user_choice=user_choice,
         provider_events=provider_events,
     )

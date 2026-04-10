@@ -175,7 +175,7 @@ COMPETITORS:
 REMAINING_GAP: <one paragraph or "none identified">"""
 
 
-SYNTHESIZER_PIVOT = """You are facilitating a pivot for a product idea that faces significant market competition.
+SYNTHESIZER_REFRAME = """You are facilitating a reframe for a product idea that faces significant market competition.
 
 You have been given the original idea and a list of existing competitors or similar projects.
 
@@ -183,7 +183,7 @@ Your job is to pass this context to the council with one question: given what al
 
 Do not answer the question yourself. Frame it clearly for the council.
 
-Respond with the pivot prompt the council should receive."""
+Respond with the reframe prompt the council should receive."""
 
 
 SYNTHESIZER_PROPOSAL = """You are writing a project scope and proposal document for a software product idea that has passed a structured multi-model debate and market evaluation.

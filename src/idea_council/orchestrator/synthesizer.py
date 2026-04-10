@@ -5,7 +5,7 @@ from idea_council.providers.adapter import ProviderAdapter
 from idea_council.roles.prompts import (
     FINAL_SYNTHESIS,
     SYNTHESIZER_EXIT_CHECK,
-    SYNTHESIZER_PIVOT,
+    SYNTHESIZER_REFRAME,
     SYNTHESIZER_PROPOSAL,
 )
 
@@ -41,14 +41,14 @@ def check_exit(
     return signal
 
 
-def generate_pivot_prompt(
+def generate_reframe_prompt(
     seed_idea: str,
     competitor_hits: list[str],
     synthesizer: ProviderAdapter,
     max_tokens: int,
 ) -> str:
     """
-    Ask the synthesizer to frame a pivot question for the council based on
+    Ask the synthesizer to frame a reframe question for the council based on
     what competitors already exist.
     """
     competitor_list = "\n".join(f"- {url}" for url in competitor_hits)
@@ -58,7 +58,7 @@ def generate_pivot_prompt(
     )
 
     return synthesizer.call(
-        system=SYNTHESIZER_PIVOT,
+        system=SYNTHESIZER_REFRAME,
         user=user,
         max_tokens=max_tokens,
     )
@@ -162,7 +162,7 @@ def generate_proposal(
     Ask the synthesizer to produce a project scope and proposal document
     based on the completed session. Returns the proposal as a Markdown string.
     """
-    idea = report.pivot_seed if report.pivot_seed else report.seed_idea
+    idea = report.reframe_seed if report.reframe_seed else report.seed_idea
 
     kill_conditions_text = "\n".join(f"- {c}" for c in report.kill_conditions)
     what_must_be_true_text = "\n".join(f"- {c}" for c in report.what_must_be_true)

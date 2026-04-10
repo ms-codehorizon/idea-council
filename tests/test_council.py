@@ -281,7 +281,7 @@ def test_run_session_user_choice_abandon_exits_early(
 @patch("idea_council.orchestrator.council.build_synthesizer")
 @patch("idea_council.orchestrator.council.build_debaters")
 @patch("idea_council.orchestrator.council.load_settings")
-def test_run_session_high_score_triggers_auto_pivot(
+def test_run_session_low_market_score_triggers_auto_reframe(
     mock_load_settings,
     mock_build_debaters,
     mock_build_synthesizer,
@@ -308,8 +308,8 @@ def test_run_session_high_score_triggers_auto_pivot(
         max_rounds=1,
     )
 
-    assert report.pivot_triggered is True
-    assert report.pivot_seed is not None
+    assert report.reframe_triggered is True
+    assert report.reframe_seed is not None
 
 
 @patch("idea_council.orchestrator.council.run_market_verification")

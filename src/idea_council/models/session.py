@@ -45,14 +45,14 @@ class FinalReport:
     rounds: list[DebateRound]
     rounds_completed: int
     exit_reason: str  # "synthesizer_done" or "max_rounds_reached"
-    verdict: str  # "pursue", "pivot", or "abandon"
+    verdict: str  # "pursue", "refine", or "abandon"
     opportunity_score: int  # 1-10
     strongest_argument: str
     fatal_flaw: str
     kill_conditions: list[str]
     what_must_be_true: list[str]
     market: Optional[MarketVerification]
-    pivot_triggered: bool
-    pivot_seed: Optional[str]
-    user_choice: Optional[str]  # "proceed", "pivot", or "abandon" — set when score 5-7
+    reframe_triggered: bool
+    reframe_seed: Optional[str]
+    user_choice: Optional[str]  # "proceed", "reframe", or "abandon" — set when score 4-6
     provider_events: list[str]  # fallback, skip, and repair events

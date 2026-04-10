@@ -44,7 +44,20 @@ def _print_round(round_number: int, round_type: str, responses: list, verbose: b
         ))
 
 
-def _print_assignments(role_assignments: dict, progress, title: str = "Council lineup"):
+def _truncate_to_lines(text: str, max_lines: int = 2, max_chars: int = 120) -> str:
+    """Return at most max_lines lines of text, truncating with … if needed."""
+    lines = text.strip().splitlines()
+    # Strip markdown headers and blank lines for a cleaner preview
+    clean = [ln for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+    preview = " ".join(clean[:max_lines])
+    if len(preview) > max_chars:
+        preview = preview[:max_chars].rstrip() + "…"
+    elif len(clean) > max_lines:
+        preview += "…"
+    return preview
+
+
+def _print_assignments(role_assignments: dict, progress, title: str = "Council lineup", reframe_seed: str = None):
     progress.stop()
     role_colors = {
         "optimist": "green",
@@ -63,6 +76,9 @@ def _print_assignments(role_assignments: dict, progress, title: str = "Council l
         info = role_assignments["synthesizer"]
         console.print(f"  [dim]{'—' * 30}[/dim]")
         console.print(f"  [dim]{'Synthesizer (judge)':<18}[/dim] {info['provider']}/{info['model']}")
+    if reframe_seed:
+        preview = _truncate_to_lines(reframe_seed)
+        console.print(f"\n  [dim]Reframe question:[/dim] {preview}")
     console.print("")
     progress.start()
 
@@ -133,7 +149,7 @@ def _print_final_report(report):
         box=box.DOUBLE,
     ))
 
-    if report.pivot_triggered:
+    if report.reframe_triggered:
         console.print("[yellow]Note: A reframe round was triggered due to market saturation.[/yellow]")
 
     if report.provider_events:
@@ -278,6 +294,11 @@ def main(
                 progress.update(task, description=f"[bold]{msg}[/bold]")
                 current_phase["text"] = msg
 
+            def on_reframe_prompt_ready(prompt: str):
+                progress.stop()
+                console.print(f"  [dim]Reframe question:[/dim] {_truncate_to_lines(prompt)}\n")
+                progress.start()
+
             def on_seed_ready(generated_seed: str) -> str:
                 progress.stop()
                 console.print("\n[bold]Council selected this seed idea:[/bold]")
@@ -316,7 +337,8 @@ def main(
                 ask_user_fn=ask_user_with_pause,
                 on_progress=on_progress,
                 on_roles_assigned=lambda assignments: _print_assignments(assignments, progress),
-                on_reframe_started=lambda assignments: _print_assignments(assignments, progress, title="Reframing with the same council"),
+                on_reframe_started=lambda assignments: _print_assignments(assignments, progress, title="Reframe council (roles rotated)"),
+                on_reframe_prompt_ready=on_reframe_prompt_ready,
                 on_debater_start=on_debater_start,
                 on_debater_done=on_debater_done,
                 on_seed_ready=on_seed_ready,

@@ -26,7 +26,7 @@ def make_round(round_number: int, signal: str = "continue") -> DebateRound:
 
 def test_parse_field_extracts_verdict():
     result = _parse_field(SAMPLE_FINAL_SYNTHESIS, "VERDICT")
-    assert result == "pivot"
+    assert result == "refine"
 
 
 def test_parse_score_extracts_opportunity_score():
@@ -93,7 +93,7 @@ def test_produce_final_report_returns_parsed_fields():
         max_tokens=512,
     )
 
-    assert result["verdict"] == "pivot"
+    assert result["verdict"] == "refine"
     assert result["opportunity_score"] == 6
     assert result["strongest_argument"] != ""
     assert result["fatal_flaw"] != ""

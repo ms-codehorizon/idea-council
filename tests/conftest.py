@@ -38,7 +38,7 @@ CONFIDENCE: 8"""
 SAMPLE_EXIT_DONE = "done"
 SAMPLE_EXIT_CONTINUE = "continue"
 
-SAMPLE_FINAL_SYNTHESIS = """VERDICT: pivot
+SAMPLE_FINAL_SYNTHESIS = """VERDICT: refine
 OPPORTUNITY_SCORE: 6
 STRONGEST_ARGUMENT: Gig economy workers represent a genuinely underserved credit segment with no incumbents serving them directly.
 FATAL_FLAW: Gig platforms control the data and have no incentive to share it with a third party.
