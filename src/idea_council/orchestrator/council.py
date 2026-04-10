@@ -5,7 +5,11 @@ from datetime import datetime, UTC
 
 from idea_council.config.settings import load_settings
 from idea_council.models.session import FinalReport
-from idea_council.providers.registry import build_debaters, build_fallback, build_synthesizer
+from idea_council.providers.registry import (
+    build_debaters,
+    build_fallback,
+    build_synthesizer,
+)
 from idea_council.orchestrator.rotation import assign_roles, describe_assignments
 from idea_council.orchestrator.seed import generate_seeds
 from idea_council.orchestrator.debate import run_round
@@ -17,7 +21,9 @@ from idea_council.orchestrator.synthesizer import (
 )
 
 
-def _default_ask_user(score: int, competitor_hits: list[str], seed_idea: str = "") -> str:
+def _default_ask_user(
+    score: int, competitor_hits: list[str], seed_idea: str = ""
+) -> str:
     """
     Prompts the user to choose what to do when market_openness is 4-6.
     Returns "proceed", "reframe", or "abandon".
@@ -82,7 +88,9 @@ def _save_report(report: FinalReport, output_dir: str, domain: str) -> str:
             "market_openness": report.market.market_openness,
             "remaining_gap": report.market.remaining_gap,
             "skipped": report.market.skipped,
-        } if report.market else None,
+        }
+        if report.market
+        else None,
         "provider_events": report.provider_events,
         "rounds": [
             {
@@ -162,6 +170,7 @@ def run_session(
     if on_reframe_prompt_ready is None:
         on_reframe_prompt_ready = _noop_one
     if on_seed_ready is None:
+
         def on_seed_ready(s):
             return s
 
@@ -185,7 +194,10 @@ def run_session(
 
     assignment = assign_roles(debaters)
     role_assignments = describe_assignments(assignment)
-    role_assignments["synthesizer"] = {"provider": synthesizer.provider, "model": synthesizer.model}
+    role_assignments["synthesizer"] = {
+        "provider": synthesizer.provider,
+        "model": synthesizer.model,
+    }
     on_roles_assigned(role_assignments)
 
     # Step 2: Seed
@@ -218,7 +230,9 @@ def run_session(
 
     for round_number in range(1, max_rounds + 1):
         round_type = "independent analysis" if round_number == 1 else "reaction"
-        on_progress(f"Round {round_number} — {round_type} ({len(assignment)} debaters)...")
+        on_progress(
+            f"Round {round_number} — {round_type} ({len(assignment)} debaters)..."
+        )
 
         debate_round = run_round(
             round_number=round_number,
@@ -239,7 +253,9 @@ def run_session(
         # First possible check is round 3. Also skip on the final allowed round
         # so the synthesizer only stops an in-progress debate, not a finished one.
         if round_number > 2 and round_number < max_rounds:
-            on_progress(f"Round {round_number} complete. Checking if debate should continue...")
+            on_progress(
+                f"Round {round_number} complete. Checking if debate should continue..."
+            )
             signal = check_exit(
                 rounds=rounds + [debate_round],
                 synthesizer=synthesizer,
@@ -250,7 +266,9 @@ def run_session(
         elif round_number <= 2:
             debate_round.synthesizer_signal = "not_checked"
             if round_number == 1:
-                on_progress(f"Round {round_number} complete. Moving to reaction rounds...")
+                on_progress(
+                    f"Round {round_number} complete. Moving to reaction rounds..."
+                )
             else:
                 on_progress(f"Round {round_number} complete. Continuing debate...")
         else:
@@ -278,7 +296,9 @@ def run_session(
     if market.skipped:
         on_progress("Market verification skipped (no search sources configured).")
     else:
-        on_progress(f"Market verification complete. Market openness: {market.market_openness}/10")
+        on_progress(
+            f"Market verification complete. Market openness: {market.market_openness}/10"
+        )
 
     # Step 5: Act on market_openness
     user_choice = None
@@ -294,7 +314,10 @@ def run_session(
             reframe_triggered = True
             reframe_assignment = assign_roles(debaters)
             reframe_role_assignments = describe_assignments(reframe_assignment)
-            reframe_role_assignments["synthesizer"] = {"provider": synthesizer.provider, "model": synthesizer.model}
+            reframe_role_assignments["synthesizer"] = {
+                "provider": synthesizer.provider,
+                "model": synthesizer.model,
+            }
             on_reframe_started(reframe_role_assignments)
             reframe_prompt = generate_reframe_prompt(
                 seed_idea=chosen_seed,
@@ -358,7 +381,10 @@ def run_session(
                 reframe_triggered = True
                 reframe_assignment = assign_roles(debaters)
                 reframe_role_assignments = describe_assignments(reframe_assignment)
-                reframe_role_assignments["synthesizer"] = {"provider": synthesizer.provider, "model": synthesizer.model}
+                reframe_role_assignments["synthesizer"] = {
+                    "provider": synthesizer.provider,
+                    "model": synthesizer.model,
+                }
                 on_reframe_started(reframe_role_assignments)
                 reframe_prompt = generate_reframe_prompt(
                     seed_idea=chosen_seed,

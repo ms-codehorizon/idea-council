@@ -21,7 +21,7 @@ def assign_roles(debaters: list[ProviderAdapter]) -> dict:
             f"At least 2 debaters are required to run a debate. Got {len(debaters)}."
         )
 
-    active_roles = ROLES[:len(debaters)]
+    active_roles = ROLES[: len(debaters)]
 
     shuffled_debaters = debaters.copy()
     random.shuffle(shuffled_debaters)

@@ -49,14 +49,17 @@ def load_settings() -> Settings:
     return Settings(
         anthropic_api_key=api_key,
         anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
-        anthropic_fallback_model=os.getenv("ANTHROPIC_FALLBACK_MODEL", "claude-haiku-4-5"),
+        anthropic_fallback_model=os.getenv(
+            "ANTHROPIC_FALLBACK_MODEL", "claude-haiku-4-5"
+        ),
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         ollama_models=ollama_models,
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
         google_api_key=os.getenv("GOOGLE_API_KEY", ""),
         google_model=os.getenv("GOOGLE_MODEL", "gemini-2.0-flash"),
-        github_search_enabled=os.getenv("GITHUB_SEARCH_ENABLED", "true").lower() == "true",
+        github_search_enabled=os.getenv("GITHUB_SEARCH_ENABLED", "true").lower()
+        == "true",
         github_search_max_results=int(os.getenv("GITHUB_SEARCH_MAX_RESULTS", "10")),
         tavily_api_key=os.getenv("TAVILY_API_KEY", ""),
         max_tokens_per_call=int(os.getenv("MAX_TOKENS_PER_CALL", "2048")),

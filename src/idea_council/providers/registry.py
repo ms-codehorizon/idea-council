@@ -36,17 +36,21 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
     debaters = []
 
     # Anthropic debater
-    debaters.append(AnthropicAdapter(
-        model=settings.anthropic_model,
-        api_key=settings.anthropic_api_key,
-    ))
+    debaters.append(
+        AnthropicAdapter(
+            model=settings.anthropic_model,
+            api_key=settings.anthropic_api_key,
+        )
+    )
 
     # Ollama debaters — check which models are actually available
     if settings.ollama_models:
         available = _get_available_ollama_models(settings.ollama_base_url)
 
         if not available:
-            print(f"[warning] Ollama not reachable at {settings.ollama_base_url} — skipping local models")
+            print(
+                f"[warning] Ollama not reachable at {settings.ollama_base_url} — skipping local models"
+            )
         else:
             for model in settings.ollama_models:
                 # Ollama model names can be stored with or without the :tag suffix
@@ -55,26 +59,34 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
                     for available_model in available
                 )
                 if is_available:
-                    debaters.append(OllamaAdapter(
-                        model=model,
-                        base_url=settings.ollama_base_url,
-                    ))
+                    debaters.append(
+                        OllamaAdapter(
+                            model=model,
+                            base_url=settings.ollama_base_url,
+                        )
+                    )
                 else:
-                    print(f"[warning] Ollama model '{model}' is not pulled — skipping. Run: ollama pull {model}")
+                    print(
+                        f"[warning] Ollama model '{model}' is not pulled — skipping. Run: ollama pull {model}"
+                    )
 
     # OpenAI debater
     if settings.openai_api_key:
-        debaters.append(OpenAIAdapter(
-            model=settings.openai_model,
-            api_key=settings.openai_api_key,
-        ))
+        debaters.append(
+            OpenAIAdapter(
+                model=settings.openai_model,
+                api_key=settings.openai_api_key,
+            )
+        )
 
     # Google debater
     if settings.google_api_key:
-        debaters.append(GoogleAdapter(
-            model=settings.google_model,
-            api_key=settings.google_api_key,
-        ))
+        debaters.append(
+            GoogleAdapter(
+                model=settings.google_model,
+                api_key=settings.google_api_key,
+            )
+        )
 
     return debaters
 

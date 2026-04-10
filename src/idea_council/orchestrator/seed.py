@@ -4,7 +4,9 @@ from idea_council.providers.adapter import ProviderAdapter
 from idea_council.roles.prompts import SEED_GENERATOR
 
 
-def _generate_one_seed(adapter: ProviderAdapter, domain: str, exclusions: list[str], max_tokens: int) -> str:
+def _generate_one_seed(
+    adapter: ProviderAdapter, domain: str, exclusions: list[str], max_tokens: int
+) -> str:
     """Ask one provider to generate a seed idea for the given domain."""
     user_prompt = f"Domain: {domain}"
 
@@ -15,9 +17,11 @@ def _generate_one_seed(adapter: ProviderAdapter, domain: str, exclusions: list[s
     return adapter.call(system=SEED_GENERATOR, user=user_prompt, max_tokens=max_tokens)
 
 
-def _pick_best_seed(seeds: list[str], domain: str, synthesizer: ProviderAdapter, max_tokens: int) -> str:
+def _pick_best_seed(
+    seeds: list[str], domain: str, synthesizer: ProviderAdapter, max_tokens: int
+) -> str:
     """Ask the synthesizer to pick the most distinctive seed from the list."""
-    numbered = "\n\n".join(f"Idea {i+1}:\n{seed}" for i, seed in enumerate(seeds))
+    numbered = "\n\n".join(f"Idea {i + 1}:\n{seed}" for i, seed in enumerate(seeds))
 
     system = (
         "You are selecting the most promising idea from a list of candidates. "
@@ -44,7 +48,9 @@ def generate_seeds(
 
     with ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(_generate_one_seed, adapter, domain, exclusions, max_tokens): adapter
+            executor.submit(
+                _generate_one_seed, adapter, domain, exclusions, max_tokens
+            ): adapter
             for adapter in debaters
         }
         for future in as_completed(futures):
@@ -53,10 +59,14 @@ def generate_seeds(
                 seed = future.result()
                 seeds.append(seed.strip())
             except Exception as e:
-                print(f"[warning] Seed generation failed for {adapter.provider}/{adapter.model}: {e}")
+                print(
+                    f"[warning] Seed generation failed for {adapter.provider}/{adapter.model}: {e}"
+                )
 
     if not seeds:
-        raise RuntimeError("All providers failed to generate a seed idea. Cannot continue.")
+        raise RuntimeError(
+            "All providers failed to generate a seed idea. Cannot continue."
+        )
 
     if len(seeds) == 1:
         return seeds[0], []

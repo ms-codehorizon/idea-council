@@ -12,7 +12,9 @@ from idea_council.roles.prompts import (
 )
 
 
-def _generate_search_queries(seed_idea: str, synthesizer: ProviderAdapter, max_tokens: int) -> list[str]:
+def _generate_search_queries(
+    seed_idea: str, synthesizer: ProviderAdapter, max_tokens: int
+) -> list[str]:
     """Ask the synthesizer to produce 4 semantically distinct search queries for the idea."""
     raw = synthesizer.call(
         system=SYNTHESIZER_QUERY_GENERATION,
@@ -37,9 +39,14 @@ def _search_github(query: str, max_results: int) -> list[dict]:
     try:
         result = subprocess.run(
             [
-                "gh", "search", "repos", query,
-                "--limit", str(max_results),
-                "--json", "name,description,url,stargazersCount",
+                "gh",
+                "search",
+                "repos",
+                query,
+                "--limit",
+                str(max_results),
+                "--json",
+                "name,description,url,stargazersCount",
             ],
             capture_output=True,
             text=True,
@@ -61,10 +68,12 @@ def _search_tavily(query: str, client: TavilyClient) -> list[dict]:
         response = client.search(query=query, max_results=5)
         results = []
         for item in response.get("results", []):
-            results.append({
-                "title": item.get("title", ""),
-                "url": item.get("url", ""),
-            })
+            results.append(
+                {
+                    "title": item.get("title", ""),
+                    "url": item.get("url", ""),
+                }
+            )
         return results
     except Exception:
         return []
@@ -199,9 +208,7 @@ def run_market_verification(
 
         if tavily_client:
             for query in queries:
-                futures.append(
-                    executor.submit(_search_tavily, query, tavily_client)
-                )
+                futures.append(executor.submit(_search_tavily, query, tavily_client))
 
         for future in as_completed(futures):
             try:

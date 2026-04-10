@@ -10,15 +10,19 @@ from idea_council.orchestrator.synthesizer import generate_proposal
 from idea_council.config.settings import load_settings
 from idea_council.providers.registry import build_synthesizer
 
-app = typer.Typer(help="idea-council: multi-provider LLM debate for early product ideation")
+app = typer.Typer(
+    help="idea-council: multi-provider LLM debate for early product ideation"
+)
 console = Console()
 
 
 def _print_header():
-    console.print(Panel.fit(
-        "[bold cyan]idea-council[/bold cyan]\n[dim]multi-provider LLM debate council[/dim]",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]idea-council[/bold cyan]\n[dim]multi-provider LLM debate council[/dim]",
+            border_style="cyan",
+        )
+    )
 
 
 def _print_round(round_number: int, round_type: str, responses: list, verbose: bool):
@@ -33,15 +37,17 @@ def _print_round(round_number: int, round_type: str, responses: list, verbose: b
             "domain_expert": "blue",
         }.get(response.role, "white")
 
-        console.print(Panel(
-            f"[bold]{response.position}[/bold]\n\n" +
-            "\n".join(f"• {arg}" for arg in response.arguments) +
-            f"\n\n[dim]Confidence: {response.confidence}/10[/dim]",
-            title=f"[{color}]{response.role.replace('_', ' ').title()}[/{color}] "
-                  f"[dim]({response.provider}/{response.model})[/dim]",
-            border_style=color,
-            box=box.ROUNDED,
-        ))
+        console.print(
+            Panel(
+                f"[bold]{response.position}[/bold]\n\n"
+                + "\n".join(f"• {arg}" for arg in response.arguments)
+                + f"\n\n[dim]Confidence: {response.confidence}/10[/dim]",
+                title=f"[{color}]{response.role.replace('_', ' ').title()}[/{color}] "
+                f"[dim]({response.provider}/{response.model})[/dim]",
+                border_style=color,
+                box=box.ROUNDED,
+            )
+        )
 
 
 def _truncate_to_lines(text: str, max_lines: int = 2, max_chars: int = 120) -> str:
@@ -57,7 +63,12 @@ def _truncate_to_lines(text: str, max_lines: int = 2, max_chars: int = 120) -> s
     return preview
 
 
-def _print_assignments(role_assignments: dict, progress, title: str = "Council lineup", reframe_seed: str = None):
+def _print_assignments(
+    role_assignments: dict,
+    progress,
+    title: str = "Council lineup",
+    reframe_seed: str = None,
+):
     progress.stop()
     role_colors = {
         "optimist": "green",
@@ -71,11 +82,15 @@ def _print_assignments(role_assignments: dict, progress, title: str = "Council l
             continue
         color = role_colors.get(role, "white")
         label = role.replace("_", " ").title()
-        console.print(f"  [{color}]{label:<18}[/{color}] {info['provider']}/{info['model']}")
+        console.print(
+            f"  [{color}]{label:<18}[/{color}] {info['provider']}/{info['model']}"
+        )
     if "synthesizer" in role_assignments:
         info = role_assignments["synthesizer"]
         console.print(f"  [dim]{'—' * 30}[/dim]")
-        console.print(f"  [dim]{'Synthesizer (judge)':<18}[/dim] {info['provider']}/{info['model']}")
+        console.print(
+            f"  [dim]{'Synthesizer (judge)':<18}[/dim] {info['provider']}/{info['model']}"
+        )
     if reframe_seed:
         preview = _truncate_to_lines(reframe_seed)
         console.print(f"\n  [dim]Reframe question:[/dim] {preview}")
@@ -103,7 +118,9 @@ def _opportunity_label(score: int) -> str:
 
 def _print_market(market):
     if not market or market.skipped:
-        console.print("\n[dim]Market verification: skipped (no search sources configured)[/dim]")
+        console.print(
+            "\n[dim]Market verification: skipped (no search sources configured)[/dim]"
+        )
         return
 
     openness = market.market_openness
@@ -113,7 +130,9 @@ def _print_market(market):
 
     color = "green" if openness >= 7 else "yellow" if openness >= 4 else "red"
     label = _market_openness_label(openness)
-    console.print(f"\n[bold]Market Openness:[/bold] [{color}]{openness}/10 ({label})[/{color}]")
+    console.print(
+        f"\n[bold]Market Openness:[/bold] [{color}]{openness}/10 ({label})[/{color}]"
+    )
 
     if market.github_hits:
         console.print(f"  [dim]GitHub ({len(market.github_hits)} repos):[/dim]")
@@ -126,7 +145,9 @@ def _print_market(market):
             console.print(f"    [blue]{url}[/blue]")
 
     if market.remaining_gap and 4 <= openness <= 6:
-        console.print(f"\n  [bold green]Gap identified:[/bold green] {market.remaining_gap}")
+        console.print(
+            f"\n  [bold green]Gap identified:[/bold green] {market.remaining_gap}"
+        )
 
 
 def _print_final_report(report):
@@ -134,23 +155,27 @@ def _print_final_report(report):
     verdict_color = verdict_colors.get(report.verdict, "white")
 
     opp_label = _opportunity_label(report.opportunity_score)
-    console.print(Panel(
-        f"[bold]Idea:[/bold]\n{report.seed_idea}\n\n"
-        f"[bold {verdict_color}]Verdict: {report.verdict.upper()}[/bold {verdict_color}]\n\n"
-        f"[bold]Opportunity Score:[/bold] {report.opportunity_score}/10 ({opp_label})\n\n"
-        f"[bold]Strongest Argument:[/bold]\n{report.strongest_argument}\n\n"
-        f"[bold]Fatal Flaw:[/bold]\n{report.fatal_flaw}\n\n"
-        f"[bold]Kill Conditions:[/bold]\n" +
-        "\n".join(f"• {c}" for c in report.kill_conditions) +
-        "\n\n[bold]What Must Be True:[/bold]\n" +
-        "\n".join(f"• {c}" for c in report.what_must_be_true),
-        title="[bold]Final Report[/bold]",
-        border_style=verdict_color,
-        box=box.DOUBLE,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Idea:[/bold]\n{report.seed_idea}\n\n"
+            f"[bold {verdict_color}]Verdict: {report.verdict.upper()}[/bold {verdict_color}]\n\n"
+            f"[bold]Opportunity Score:[/bold] {report.opportunity_score}/10 ({opp_label})\n\n"
+            f"[bold]Strongest Argument:[/bold]\n{report.strongest_argument}\n\n"
+            f"[bold]Fatal Flaw:[/bold]\n{report.fatal_flaw}\n\n"
+            f"[bold]Kill Conditions:[/bold]\n"
+            + "\n".join(f"• {c}" for c in report.kill_conditions)
+            + "\n\n[bold]What Must Be True:[/bold]\n"
+            + "\n".join(f"• {c}" for c in report.what_must_be_true),
+            title="[bold]Final Report[/bold]",
+            border_style=verdict_color,
+            box=box.DOUBLE,
+        )
+    )
 
     if report.reframe_triggered:
-        console.print("[yellow]Note: A reframe round was triggered due to market saturation.[/yellow]")
+        console.print(
+            "[yellow]Note: A reframe round was triggered due to market saturation.[/yellow]"
+        )
 
     if report.provider_events:
         console.print("\n[dim]Provider events:[/dim]")
@@ -160,12 +185,24 @@ def _print_final_report(report):
 
 @app.command()
 def main(
-    domain: str = typer.Option(..., "--domain", help="Domain or theme for ideation (e.g. 'developer tools')"),
-    seed: Optional[str] = typer.Option(None, "--seed", help="Optional seed idea to debate instead of generating one"),
-    exclude: Optional[str] = typer.Option(None, "--exclude", help="Comma-separated list of existing projects to exclude"),
-    context: Optional[str] = typer.Option(None, "--context", help="Personal background to guide idea generation"),
-    rounds: int = typer.Option(3, "--rounds", help="Maximum number of debate rounds (default: 3)"),
-    verbose: bool = typer.Option(False, "--verbose", help="Show all round responses before the final report"),
+    domain: str = typer.Option(
+        ..., "--domain", help="Domain or theme for ideation (e.g. 'developer tools')"
+    ),
+    seed: Optional[str] = typer.Option(
+        None, "--seed", help="Optional seed idea to debate instead of generating one"
+    ),
+    exclude: Optional[str] = typer.Option(
+        None, "--exclude", help="Comma-separated list of existing projects to exclude"
+    ),
+    context: Optional[str] = typer.Option(
+        None, "--context", help="Personal background to guide idea generation"
+    ),
+    rounds: int = typer.Option(
+        3, "--rounds", help="Maximum number of debate rounds (default: 3)"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", help="Show all round responses before the final report"
+    ),
 ):
     _print_header()
 
@@ -186,7 +223,9 @@ def main(
         while True:
             mode_choice = input("\nEnter choice (1/2): ").strip()
             if mode_choice == "1":
-                console.print("\n[dim]Council will generate a seed idea for the domain.[/dim]")
+                console.print(
+                    "\n[dim]Council will generate a seed idea for the domain.[/dim]"
+                )
                 break
             elif mode_choice == "2":
                 while True:
@@ -211,11 +250,15 @@ def main(
         transient=False,
     )
 
-    def ask_user_with_pause(score: int, competitor_hits: list, seed_idea: str = "") -> str:
+    def ask_user_with_pause(
+        score: int, competitor_hits: list, seed_idea: str = ""
+    ) -> str:
         progress.stop()
         if seed_idea:
             console.print(f"\n[bold]Idea being evaluated:[/bold]\n{seed_idea}")
-        console.print(f"\n[bold]Market Openness:[/bold] {score}/10 — moderate competition found.")
+        console.print(
+            f"\n[bold]Market Openness:[/bold] {score}/10 — moderate competition found."
+        )
         console.print("\nTop hits:")
         for url in competitor_hits[:5]:
             console.print(f"  [blue]{url}[/blue]")
@@ -248,13 +291,17 @@ def main(
         "domain_expert": "blue",
     }
     debater_tasks = {}
-    debater_info = {}          # role -> {"label": str, "pm": str, "color": str}
+    debater_info = {}  # role -> {"label": str, "pm": str, "color": str}
     current_phase = {"text": ""}  # mutable container so closures can read/write it
 
     def on_debater_start(role: str, provider: str, model: str):
         color = role_colors.get(role, "white")
         label = role.replace("_", " ").title()
-        debater_info[role] = {"label": label, "pm": f"{provider}/{model}", "color": color}
+        debater_info[role] = {
+            "label": label,
+            "pm": f"{provider}/{model}",
+            "color": color,
+        }
         task_id = progress.add_task(
             f"  [{color}]{label:<18}[/{color}] [dim]{provider}/{model}[/dim]",
             total=None,
@@ -280,7 +327,9 @@ def main(
                 if debater_tasks:
                     # Print a permanent record of the round that just finished
                     # before removing the live spinner rows.
-                    console.print(f"[green]✓[/green] [bold]{current_phase['text']}[/bold]")
+                    console.print(
+                        f"[green]✓[/green] [bold]{current_phase['text']}[/bold]"
+                    )
                     for info in debater_info.values():
                         color = info["color"]
                         console.print(
@@ -296,17 +345,21 @@ def main(
 
             def on_reframe_prompt_ready(prompt: str):
                 progress.stop()
-                console.print(f"  [dim]Reframe question:[/dim] {_truncate_to_lines(prompt)}\n")
+                console.print(
+                    f"  [dim]Reframe question:[/dim] {_truncate_to_lines(prompt)}\n"
+                )
                 progress.start()
 
             def on_seed_ready(generated_seed: str) -> str:
                 progress.stop()
                 console.print("\n[bold]Council selected this seed idea:[/bold]")
-                console.print(Panel(
-                    generated_seed,
-                    border_style="cyan",
-                    box=box.ROUNDED,
-                ))
+                console.print(
+                    Panel(
+                        generated_seed,
+                        border_style="cyan",
+                        box=box.ROUNDED,
+                    )
+                )
                 console.print("  [cyan][1][/cyan] Pursue this idea")
                 console.print("  [cyan][2][/cyan] Enter your own seed idea instead")
                 while True:
@@ -336,8 +389,12 @@ def main(
                 verbose=False,
                 ask_user_fn=ask_user_with_pause,
                 on_progress=on_progress,
-                on_roles_assigned=lambda assignments: _print_assignments(assignments, progress),
-                on_reframe_started=lambda assignments: _print_assignments(assignments, progress, title="Reframe council (roles rotated)"),
+                on_roles_assigned=lambda assignments: _print_assignments(
+                    assignments, progress
+                ),
+                on_reframe_started=lambda assignments: _print_assignments(
+                    assignments, progress, title="Reframe council (roles rotated)"
+                ),
                 on_reframe_prompt_ready=on_reframe_prompt_ready,
                 on_debater_start=on_debater_start,
                 on_debater_done=on_debater_done,
@@ -353,7 +410,12 @@ def main(
     # Print round output if verbose
     if verbose:
         for debate_round in report.rounds:
-            _print_round(debate_round.round_number, debate_round.type, debate_round.responses, verbose=True)
+            _print_round(
+                debate_round.round_number,
+                debate_round.type,
+                debate_round.responses,
+                verbose=True,
+            )
 
     # Print market verification results
     _print_market(report.market)
@@ -371,7 +433,9 @@ def main(
     if report.verdict == "pursue":
         should_generate = True
     elif report.verdict == "refine":
-        console.print("\n[yellow]The council recommends refining this idea before building.[/yellow]")
+        console.print(
+            "\n[yellow]The council recommends refining this idea before building.[/yellow]"
+        )
         answer = input("Generate a project proposal anyway? [y/N]: ").strip().lower()
         should_generate = answer == "y"
 
@@ -387,6 +451,7 @@ def main(
             )
             import os
             from datetime import datetime, UTC
+
             proposals_dir = "proposals"
             os.makedirs(proposals_dir, exist_ok=True)
             timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
@@ -394,7 +459,9 @@ def main(
             proposal_path = os.path.join(proposals_dir, f"{timestamp}_{slug}.md")
             with open(proposal_path, "w") as f:
                 f.write(f"# Project Proposal — {domain.title()}\n\n")
-                f.write(f"*Generated by idea-council · session {report.session_id} · {timestamp}*\n\n")
+                f.write(
+                    f"*Generated by idea-council · session {report.session_id} · {timestamp}*\n\n"
+                )
                 f.write("---\n\n")
                 f.write(proposal_text)
             console.print(f"[green]Proposal saved to {proposal_path}[/green]")

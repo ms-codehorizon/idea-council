@@ -1,4 +1,3 @@
-
 from idea_council.models.session import DebateRound, FinalReport, MarketVerification
 from idea_council.orchestrator.debate import _strip_thinking_tags
 from idea_council.providers.adapter import ProviderAdapter
@@ -21,17 +20,21 @@ def check_exit(
     """
     all_responses = []
     for debate_round in rounds:
-        all_responses.append(f"--- Round {debate_round.round_number} ({debate_round.type}) ---")
+        all_responses.append(
+            f"--- Round {debate_round.round_number} ({debate_round.type}) ---"
+        )
         for response in debate_round.responses:
             all_responses.append(f"{response.role.upper()}:\n{response.raw}")
 
     user = "\n\n".join(all_responses)
 
-    raw = _strip_thinking_tags(synthesizer.call(
-        system=SYNTHESIZER_EXIT_CHECK,
-        user=user,
-        max_tokens=64,
-    ))
+    raw = _strip_thinking_tags(
+        synthesizer.call(
+            system=SYNTHESIZER_EXIT_CHECK,
+            user=user,
+            max_tokens=64,
+        )
+    )
 
     signal = raw.strip().lower().split()[0] if raw.strip() else "continue"
 
@@ -118,9 +121,13 @@ def produce_final_report(
     """
     rounds_text = []
     for debate_round in rounds:
-        rounds_text.append(f"=== Round {debate_round.round_number} ({debate_round.type}) ===")
+        rounds_text.append(
+            f"=== Round {debate_round.round_number} ({debate_round.type}) ==="
+        )
         for response in debate_round.responses:
-            rounds_text.append(f"{response.role.upper()} ({response.provider}/{response.model}):\n{response.raw}")
+            rounds_text.append(
+                f"{response.role.upper()} ({response.provider}/{response.model}):\n{response.raw}"
+            )
 
     market_section = ""
     if market and not market.skipped and market.competitor_hits:
@@ -136,11 +143,13 @@ def produce_final_report(
         f"{market_section}"
     )
 
-    raw = _strip_thinking_tags(synthesizer.call(
-        system=FINAL_SYNTHESIS,
-        user=user,
-        max_tokens=max_tokens,
-    ))
+    raw = _strip_thinking_tags(
+        synthesizer.call(
+            system=FINAL_SYNTHESIS,
+            user=user,
+            max_tokens=max_tokens,
+        )
+    )
 
     return {
         "verdict": _parse_field(raw, "VERDICT") or "refine",
@@ -172,13 +181,15 @@ def generate_proposal(
         market_section = (
             f"Market openness: {report.market.market_openness}/10\n"
             f"Remaining gap: {report.market.remaining_gap or 'none identified'}\n"
-            f"Competitor URLs found:\n" +
-            "\n".join(f"- {url}" for url in report.market.competitor_hits[:10])
+            f"Competitor URLs found:\n"
+            + "\n".join(f"- {url}" for url in report.market.competitor_hits[:10])
         )
 
     rounds_text = []
     for debate_round in report.rounds:
-        rounds_text.append(f"=== Round {debate_round.round_number} ({debate_round.type}) ===")
+        rounds_text.append(
+            f"=== Round {debate_round.round_number} ({debate_round.type}) ==="
+        )
         for response in debate_round.responses:
             rounds_text.append(
                 f"{response.role.upper()} ({response.provider}/{response.model}):\n{response.raw}"
@@ -197,8 +208,10 @@ def generate_proposal(
         f"Debate rounds:\n{''.join(rounds_text)}"
     )
 
-    return _strip_thinking_tags(synthesizer.call(
-        system=SYNTHESIZER_PROPOSAL,
-        user=user,
-        max_tokens=max_tokens,
-    ))
+    return _strip_thinking_tags(
+        synthesizer.call(
+            system=SYNTHESIZER_PROPOSAL,
+            user=user,
+            max_tokens=max_tokens,
+        )
+    )

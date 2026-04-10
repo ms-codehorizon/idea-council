@@ -27,7 +27,9 @@ class MarketVerification:
     github_hits: list[str]
     web_hits: list[str]
     competitor_hits: list[str]  # deduplicated union of github + web hits
-    market_openness: Optional[int]  # 1-10, higher = more open space, null if search was skipped
+    market_openness: Optional[
+        int
+    ]  # 1-10, higher = more open space, null if search was skipped
     remaining_gap: Optional[str]  # gap identified by synthesizer, if any
     skipped: bool
 
@@ -54,5 +56,7 @@ class FinalReport:
     market: Optional[MarketVerification]
     reframe_triggered: bool
     reframe_seed: Optional[str]
-    user_choice: Optional[str]  # "proceed", "reframe", or "abandon" — set when score 4-6
+    user_choice: Optional[
+        str
+    ]  # "proceed", "reframe", or "abandon" — set when score 4-6
     provider_events: list[str]  # fallback, skip, and repair events

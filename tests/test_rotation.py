@@ -4,7 +4,9 @@ from idea_council.orchestrator.rotation import assign_roles, describe_assignment
 
 
 def make_debaters(count: int) -> list:
-    return [MockAdapter(f"provider_{i}", f"model_{i}", "response") for i in range(count)]
+    return [
+        MockAdapter(f"provider_{i}", f"model_{i}", "response") for i in range(count)
+    ]
 
 
 def test_assign_roles_returns_correct_number_of_assignments():

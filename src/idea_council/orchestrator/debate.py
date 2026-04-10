@@ -72,16 +72,22 @@ def _call_debater(
     used_adapter = adapter
 
     try:
-        raw = _strip_thinking_tags(adapter.call(system=system, user=user, max_tokens=max_tokens))
+        raw = _strip_thinking_tags(
+            adapter.call(system=system, user=user, max_tokens=max_tokens)
+        )
     except Exception as e:
         event = f"[fallback] {adapter.provider}/{adapter.model} failed ({e}), retrying with {fallback.provider}/{fallback.model}"
         provider_events.append(event)
         print(event)
         try:
-            raw = _strip_thinking_tags(fallback.call(system=system, user=user, max_tokens=max_tokens))
+            raw = _strip_thinking_tags(
+                fallback.call(system=system, user=user, max_tokens=max_tokens)
+            )
             used_adapter = fallback
         except Exception as e2:
-            event = f"[skip] {adapter.provider}/{adapter.model} fallback also failed ({e2})"
+            event = (
+                f"[skip] {adapter.provider}/{adapter.model} fallback also failed ({e2})"
+            )
             provider_events.append(event)
             print(event)
             return RoleResponse(
@@ -108,7 +114,9 @@ def _call_debater(
         event = f"[repair] {used_adapter.provider}/{used_adapter.model} response for role '{role}' did not parse — retrying with repair prompt"
         provider_events.append(event)
         try:
-            raw = used_adapter.call(system=system, user=repair_prompt, max_tokens=max_tokens)
+            raw = used_adapter.call(
+                system=system, user=repair_prompt, max_tokens=max_tokens
+            )
             position = _parse_position(raw)
             arguments = _parse_arguments(raw)
             confidence = _parse_confidence(raw)
@@ -127,7 +135,9 @@ def _call_debater(
     )
 
 
-def _build_reaction_context(round_responses: list[RoleResponse], current_role: str) -> str:
+def _build_reaction_context(
+    round_responses: list[RoleResponse], current_role: str
+) -> str:
     """
     Builds the anonymized context for a reaction round.
     Other debaters are labeled Debater A, B, C — not by provider or model name.
@@ -161,6 +171,7 @@ def run_round(
     Runs one debate round. Round 1 is independent analysis. Round 2+ adds
     the reaction instructions and anonymized context from the previous round.
     """
+
     def _noop_role(*args):
         pass
 
@@ -192,12 +203,13 @@ def run_round(
                 user = preamble + f"Here is the idea to evaluate:\n\n{seed_idea}"
             else:
                 context = _build_reaction_context(previous_responses, role)
-                own_previous = next((r for r in previous_responses if r.role == role), None)
+                own_previous = next(
+                    (r for r in previous_responses if r.role == role), None
+                )
                 own_previous_text = own_previous.raw if own_previous else ""
 
                 user = (
-                    preamble +
-                    f"Here is the idea being evaluated:\n\n{seed_idea}\n\n"
+                    preamble + f"Here is the idea being evaluated:\n\n{seed_idea}\n\n"
                     f"Your previous response:\n\n{own_previous_text}\n\n"
                     f"Other council members' responses:\n\n{context}\n\n"
                     f"{prompts.REACTION_INSTRUCTIONS}"
@@ -225,7 +237,9 @@ def run_round(
 
     # Sort so output is consistent across runs
     role_order = list(assignment.keys())
-    responses.sort(key=lambda r: role_order.index(r.role) if r.role in role_order else 99)
+    responses.sort(
+        key=lambda r: role_order.index(r.role) if r.role in role_order else 99
+    )
 
     return DebateRound(
         round_number=round_number,

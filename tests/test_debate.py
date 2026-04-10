@@ -1,4 +1,3 @@
-import pytest
 from tests.conftest import MockAdapter, SAMPLE_DEBATER_RESPONSE, SAMPLE_CRITIC_RESPONSE
 from idea_council.models.session import RoleResponse
 from idea_council.providers.adapter import ProviderAdapter
@@ -12,6 +11,7 @@ from idea_council.orchestrator.debate import (
 
 
 # --- Parser unit tests ---
+
 
 def test_parse_confidence_extracts_score():
     assert _parse_confidence("CONFIDENCE: 7") == 7
@@ -49,6 +49,7 @@ def test_parse_position_returns_empty_when_missing():
 
 # --- Anonymization tests ---
 
+
 def test_build_reaction_context_excludes_current_role():
     responses = [
         RoleResponse("optimist", "anthropic", "claude", "pos1", ["arg1"], 7, "raw1"),
@@ -63,7 +64,9 @@ def test_build_reaction_context_excludes_current_role():
 
 def test_build_reaction_context_anonymizes_provider_names():
     responses = [
-        RoleResponse("optimist", "anthropic", "claude-sonnet-4-6", "pos1", [], 7, "raw1"),
+        RoleResponse(
+            "optimist", "anthropic", "claude-sonnet-4-6", "pos1", [], 7, "raw1"
+        ),
         RoleResponse("critic", "ollama", "qwen3.5:35b", "pos2", [], 8, "raw2"),
     ]
     context = _build_reaction_context(responses, current_role="optimist")
@@ -85,6 +88,7 @@ def test_build_reaction_context_uses_debater_labels():
 
 
 # --- run_round integration tests ---
+
 
 def test_run_round_returns_debate_round_with_responses():
     debaters = {
@@ -134,8 +138,18 @@ def test_run_round_parses_position_and_arguments():
 
 def test_run_round_type_is_reaction_on_subsequent_rounds():
     previous = [
-        RoleResponse("optimist", "anthropic", "claude", "pos", ["arg"], 7, SAMPLE_DEBATER_RESPONSE),
-        RoleResponse("critic", "ollama", "qwen", "pos", ["arg"], 8, SAMPLE_CRITIC_RESPONSE),
+        RoleResponse(
+            "optimist",
+            "anthropic",
+            "claude",
+            "pos",
+            ["arg"],
+            7,
+            SAMPLE_DEBATER_RESPONSE,
+        ),
+        RoleResponse(
+            "critic", "ollama", "qwen", "pos", ["arg"], 8, SAMPLE_CRITIC_RESPONSE
+        ),
     ]
     debaters = {
         "optimist": MockAdapter("anthropic", "claude", SAMPLE_DEBATER_RESPONSE),
@@ -171,7 +185,7 @@ def test_run_round_uses_fallback_when_primary_fails():
     fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
     provider_events = []
 
-    result = run_round(
+    run_round(
         round_number=1,
         assignment=debaters,
         seed_idea="test idea",
@@ -203,8 +217,18 @@ def test_reaction_round_with_no_new_arguments_does_not_trigger_repair():
     fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
     provider_events = []
     previous = [
-        RoleResponse("optimist", "anthropic", "claude", "pos", ["arg"], 7, SAMPLE_DEBATER_RESPONSE),
-        RoleResponse("critic", "ollama", "qwen", "pos", ["arg"], 8, SAMPLE_CRITIC_RESPONSE),
+        RoleResponse(
+            "optimist",
+            "anthropic",
+            "claude",
+            "pos",
+            ["arg"],
+            7,
+            SAMPLE_DEBATER_RESPONSE,
+        ),
+        RoleResponse(
+            "critic", "ollama", "qwen", "pos", ["arg"], 8, SAMPLE_CRITIC_RESPONSE
+        ),
     ]
 
     run_round(
@@ -243,6 +267,7 @@ def test_first_round_missing_arguments_still_triggers_repair():
 
 
 # --- user_context and exclusions in prompts ---
+
 
 def test_user_context_appears_in_debater_prompt():
     adapter = MockAdapter("anthropic", "claude", SAMPLE_DEBATER_RESPONSE)
@@ -284,7 +309,15 @@ def test_context_and_exclusions_appear_in_reaction_round_prompt():
     adapter = MockAdapter("anthropic", "claude", SAMPLE_REACTION_NO_NEW_ARGS)
     fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
     previous = [
-        RoleResponse("optimist", "anthropic", "claude", "pos", ["arg"], 7, SAMPLE_DEBATER_RESPONSE),
+        RoleResponse(
+            "optimist",
+            "anthropic",
+            "claude",
+            "pos",
+            ["arg"],
+            7,
+            SAMPLE_DEBATER_RESPONSE,
+        ),
     ]
 
     run_round(

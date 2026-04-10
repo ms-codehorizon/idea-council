@@ -14,7 +14,6 @@ class ProviderAdapter:
 
 
 class AnthropicAdapter(ProviderAdapter):
-
     def __init__(self, model: str, api_key: str):
         super().__init__("anthropic", model)
         self.client = anthropic.Anthropic(api_key=api_key)
@@ -52,7 +51,6 @@ class OllamaAdapter(ProviderAdapter):
 
 
 class OpenAIAdapter(ProviderAdapter):
-
     def __init__(self, model: str, api_key: str):
         super().__init__("openai", model)
         self.client = openai.OpenAI(api_key=api_key)

@@ -6,7 +6,6 @@ from tests.conftest import (
     SAMPLE_CRITIC_RESPONSE,
     SAMPLE_EXIT_DONE,
     SAMPLE_FINAL_SYNTHESIS,
-    SAMPLE_MARKET_INTERPRETATION,
 )
 from idea_council.orchestrator.council import run_session
 from idea_council.models.session import MarketVerification
@@ -57,7 +56,11 @@ def make_synthesizer(response: str = None):
         def call(self, system, user, max_tokens=2048):
             call_counter["count"] += 1
             # First call is seed selection, second is exit check, last is final report
-            if "continue" in system.lower() or "done" in system.lower() or max_tokens == 64:
+            if (
+                "continue" in system.lower()
+                or "done" in system.lower()
+                or max_tokens == 64
+            ):
                 return SAMPLE_EXIT_DONE
             if "VERDICT" in SAMPLE_FINAL_SYNTHESIS and "synthesis" in system.lower():
                 return SAMPLE_FINAL_SYNTHESIS
@@ -92,8 +95,12 @@ def test_run_session_mode_b_skips_seed_phase(
 ):
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     report, filepath = run_session(
@@ -123,8 +130,12 @@ def test_on_seed_ready_replacement_uses_custom_seed_and_sets_user_provided_mode(
     sets seed_mode to user_provided so the report accurately reflects what was debated."""
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     custom_seed = "My own idea that overrides the council suggestion."
@@ -164,8 +175,12 @@ def test_on_seed_ready_confirmation_keeps_generated_seed_and_mode(
     """on_seed_ready returning the same string leaves seed_mode as generated."""
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     report, _ = run_session(
@@ -192,8 +207,12 @@ def test_on_seed_ready_not_called_in_mode_b(
     """on_seed_ready must not fire when the user already provided a seed via --seed."""
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     call_count = {"n": 0}
@@ -226,8 +245,12 @@ def test_run_session_mode_a_generates_seed(
 ):
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     report, filepath = run_session(
@@ -253,8 +276,12 @@ def test_run_session_user_choice_abandon_exits_early(
 ):
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = MarketVerification(
         search_queries=["query"],
         github_hits=["https://github.com/example/repo"],
@@ -290,8 +317,12 @@ def test_run_session_low_market_score_triggers_auto_reframe(
 ):
     mock_load_settings.return_value = make_mock_settings()
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = MarketVerification(
         search_queries=["query"],
         github_hits=["https://github.com/example/repo"],
@@ -330,8 +361,12 @@ def test_run_session_saves_report_to_disk(
 
     mock_load_settings.return_value = settings
     mock_build_debaters.return_value = make_debater_pool()
-    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
-    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_build_synthesizer.return_value = MockAdapter(
+        "anthropic", "claude", SAMPLE_FINAL_SYNTHESIS
+    )
+    mock_build_fallback.return_value = MockAdapter(
+        "anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE
+    )
     mock_run_market.return_value = make_skipped_market()
 
     report, filepath = run_session(
@@ -341,6 +376,7 @@ def test_run_session_saves_report_to_disk(
     )
 
     import os
+
     assert os.path.exists(filepath)
     assert filepath.endswith(".json")
 
