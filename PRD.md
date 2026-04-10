@@ -2,7 +2,7 @@
 
 **Version:** 1.4  
 **Date:** 2026-04-10  
-**Status:** Draft
+**Status:** Active — v1 implemented, CI/CD in place, open for iteration
 
 ---
 
