@@ -24,7 +24,7 @@ def _default_ask_user(score: int, competitor_hits: list[str], seed_idea: str = "
     """
     if seed_idea:
         print(f"\nIdea being evaluated:\n{seed_idea}")
-    print(f"\nMarket openness: {11 - score}/10 — moderate competition found.")
+    print(f"\nMarket openness: {score}/10 — moderate competition found.")
     print("\nTop hits:")
     for url in competitor_hits[:5]:
         print(f"  - {url}")
@@ -124,6 +124,7 @@ def run_session(
     on_reframe_started=None,
     on_debater_start=None,
     on_debater_done=None,
+    on_seed_ready=None,
 ) -> tuple[FinalReport, str]:
     """
     Runs a full idea-council session.
@@ -157,6 +158,9 @@ def run_session(
         on_debater_start = _noop_role
     if on_debater_done is None:
         on_debater_done = _noop_role
+    if on_seed_ready is None:
+        def on_seed_ready(s):
+            return s
 
     if exclusions is None:
         exclusions = []
@@ -197,7 +201,12 @@ def run_session(
             max_tokens=settings.max_tokens_per_call,
         )
         seed_mode = "generated"
-        on_progress("Seed selected. Assigning roles...")
+        on_progress("Seed idea ready. Waiting for confirmation...")
+        confirmed_seed = on_seed_ready(chosen_seed)
+        if confirmed_seed != chosen_seed:
+            chosen_seed = confirmed_seed
+            seed_mode = "user_provided"
+        on_progress("Seed confirmed. Starting debate...")
 
     # Step 3: Debate rounds
     rounds = []

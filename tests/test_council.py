@@ -112,6 +112,111 @@ def test_run_session_mode_b_skips_seed_phase(
 @patch("idea_council.orchestrator.council.build_synthesizer")
 @patch("idea_council.orchestrator.council.build_debaters")
 @patch("idea_council.orchestrator.council.load_settings")
+def test_on_seed_ready_replacement_uses_custom_seed_and_sets_user_provided_mode(
+    mock_load_settings,
+    mock_build_debaters,
+    mock_build_synthesizer,
+    mock_build_fallback,
+    mock_run_market,
+):
+    """on_seed_ready returning a different string replaces the generated seed and
+    sets seed_mode to user_provided so the report accurately reflects what was debated."""
+    mock_load_settings.return_value = make_mock_settings()
+    mock_build_debaters.return_value = make_debater_pool()
+    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
+    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_run_market.return_value = make_skipped_market()
+
+    custom_seed = "My own idea that overrides the council suggestion."
+    received_seeds = []
+
+    def capture_and_replace(generated: str) -> str:
+        received_seeds.append(generated)
+        return custom_seed
+
+    report, _ = run_session(
+        domain="fintech",
+        max_rounds=1,
+        on_seed_ready=capture_and_replace,
+    )
+
+    # Callback received the council-generated seed
+    assert len(received_seeds) == 1
+    assert received_seeds[0] != custom_seed
+
+    # Report reflects the user's replacement
+    assert report.seed_idea == custom_seed
+    assert report.seed_mode == "user_provided"
+
+
+@patch("idea_council.orchestrator.council.run_market_verification")
+@patch("idea_council.orchestrator.council.build_fallback")
+@patch("idea_council.orchestrator.council.build_synthesizer")
+@patch("idea_council.orchestrator.council.build_debaters")
+@patch("idea_council.orchestrator.council.load_settings")
+def test_on_seed_ready_confirmation_keeps_generated_seed_and_mode(
+    mock_load_settings,
+    mock_build_debaters,
+    mock_build_synthesizer,
+    mock_build_fallback,
+    mock_run_market,
+):
+    """on_seed_ready returning the same string leaves seed_mode as generated."""
+    mock_load_settings.return_value = make_mock_settings()
+    mock_build_debaters.return_value = make_debater_pool()
+    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
+    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_run_market.return_value = make_skipped_market()
+
+    report, _ = run_session(
+        domain="fintech",
+        max_rounds=1,
+        on_seed_ready=lambda seed: seed,  # confirm as-is
+    )
+
+    assert report.seed_mode == "generated"
+
+
+@patch("idea_council.orchestrator.council.run_market_verification")
+@patch("idea_council.orchestrator.council.build_fallback")
+@patch("idea_council.orchestrator.council.build_synthesizer")
+@patch("idea_council.orchestrator.council.build_debaters")
+@patch("idea_council.orchestrator.council.load_settings")
+def test_on_seed_ready_not_called_in_mode_b(
+    mock_load_settings,
+    mock_build_debaters,
+    mock_build_synthesizer,
+    mock_build_fallback,
+    mock_run_market,
+):
+    """on_seed_ready must not fire when the user already provided a seed via --seed."""
+    mock_load_settings.return_value = make_mock_settings()
+    mock_build_debaters.return_value = make_debater_pool()
+    mock_build_synthesizer.return_value = MockAdapter("anthropic", "claude", SAMPLE_FINAL_SYNTHESIS)
+    mock_build_fallback.return_value = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    mock_run_market.return_value = make_skipped_market()
+
+    call_count = {"n": 0}
+
+    def should_not_be_called(seed: str) -> str:
+        call_count["n"] += 1
+        return seed
+
+    run_session(
+        domain="fintech",
+        seed="A credit score API for gig workers.",
+        max_rounds=1,
+        on_seed_ready=should_not_be_called,
+    )
+
+    assert call_count["n"] == 0
+
+
+@patch("idea_council.orchestrator.council.run_market_verification")
+@patch("idea_council.orchestrator.council.build_fallback")
+@patch("idea_council.orchestrator.council.build_synthesizer")
+@patch("idea_council.orchestrator.council.build_debaters")
+@patch("idea_council.orchestrator.council.load_settings")
 def test_run_session_mode_a_generates_seed(
     mock_load_settings,
     mock_build_debaters,

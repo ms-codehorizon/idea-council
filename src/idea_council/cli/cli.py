@@ -199,7 +199,7 @@ def main(
         progress.stop()
         if seed_idea:
             console.print(f"\n[bold]Idea being evaluated:[/bold]\n{seed_idea}")
-        console.print(f"\n[bold]Market Openness:[/bold] {11 - score}/10 — moderate competition found.")
+        console.print(f"\n[bold]Market Openness:[/bold] {score}/10 — moderate competition found.")
         console.print("\nTop hits:")
         for url in competitor_hits[:5]:
             console.print(f"  [blue]{url}[/blue]")
@@ -232,10 +232,13 @@ def main(
         "domain_expert": "blue",
     }
     debater_tasks = {}
+    debater_info = {}          # role -> {"label": str, "pm": str, "color": str}
+    current_phase = {"text": ""}  # mutable container so closures can read/write it
 
     def on_debater_start(role: str, provider: str, model: str):
         color = role_colors.get(role, "white")
         label = role.replace("_", " ").title()
+        debater_info[role] = {"label": label, "pm": f"{provider}/{model}", "color": color}
         task_id = progress.add_task(
             f"  [{color}]{label:<18}[/{color}] [dim]{provider}/{model}[/dim]",
             total=None,
@@ -258,10 +261,50 @@ def main(
             task = progress.add_task("Starting session...", total=None)
 
             def on_progress(msg: str):
-                for task_id in list(debater_tasks.values()):
-                    progress.remove_task(task_id)
-                debater_tasks.clear()
+                if debater_tasks:
+                    # Print a permanent record of the round that just finished
+                    # before removing the live spinner rows.
+                    console.print(f"[green]✓[/green] [bold]{current_phase['text']}[/bold]")
+                    for info in debater_info.values():
+                        color = info["color"]
+                        console.print(
+                            f"  [green]✓[/green] [{color}]{info['label']:<18}[/{color}]"
+                            f" [dim]{info['pm']}[/dim]"
+                        )
+                    for task_id in list(debater_tasks.values()):
+                        progress.remove_task(task_id)
+                    debater_tasks.clear()
+                    debater_info.clear()
                 progress.update(task, description=f"[bold]{msg}[/bold]")
+                current_phase["text"] = msg
+
+            def on_seed_ready(generated_seed: str) -> str:
+                progress.stop()
+                console.print("\n[bold]Council selected this seed idea:[/bold]")
+                console.print(Panel(
+                    generated_seed,
+                    border_style="cyan",
+                    box=box.ROUNDED,
+                ))
+                console.print("  [cyan][1][/cyan] Pursue this idea")
+                console.print("  [cyan][2][/cyan] Enter your own seed idea instead")
+                while True:
+                    choice = input("\nEnter choice (1/2): ").strip()
+                    if choice == "1":
+                        console.print("")
+                        progress.start()
+                        return generated_seed
+                    elif choice == "2":
+                        while True:
+                            custom = input("Enter your seed idea: ").strip()
+                            if custom:
+                                break
+                            console.print("Please enter a seed idea.")
+                        console.print(f"\n[bold]Seed:[/bold] {custom}\n")
+                        progress.start()
+                        return custom
+                    else:
+                        console.print("Please enter 1 or 2.")
 
             report, filepath = run_session(
                 domain=domain,
@@ -276,6 +319,7 @@ def main(
                 on_reframe_started=lambda assignments: _print_assignments(assignments, progress, title="Reframing with the same council"),
                 on_debater_start=on_debater_start,
                 on_debater_done=on_debater_done,
+                on_seed_ready=on_seed_ready,
             )
     except ValueError as e:
         console.print(f"[red]Configuration error:[/red] {e}")
