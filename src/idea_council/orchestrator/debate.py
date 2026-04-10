@@ -61,6 +61,7 @@ def _call_debater(
     user: str,
     max_tokens: int,
     provider_events: list[str],
+    is_reaction: bool = False,
 ) -> RoleResponse:
     """
     Calls a debater adapter. If the call fails, tries the fallback adapter once.
@@ -99,7 +100,7 @@ def _call_debater(
     arguments = _parse_arguments(raw)
     confidence = _parse_confidence(raw)
 
-    if not position or not arguments:
+    if not position or (not arguments and not is_reaction):
         repair_prompt = (
             f"The following response did not follow the required format. "
             f"Please rewrite it in the correct format.\n\nOriginal response:\n{raw}"
@@ -153,18 +154,33 @@ def run_round(
     previous_responses: list[RoleResponse] = None,
     on_debater_start=None,
     on_debater_done=None,
+    user_context: str = None,
+    exclusions: list[str] = None,
 ) -> DebateRound:
     """
     Runs one debate round. Round 1 is independent analysis. Round 2+ adds
     the reaction instructions and anonymized context from the previous round.
     """
+    def _noop_role(*args):
+        pass
+
     if on_debater_start is None:
-        on_debater_start = lambda role, provider, model: None
+        on_debater_start = _noop_role
     if on_debater_done is None:
-        on_debater_done = lambda role, provider, model: None
+        on_debater_done = _noop_role
 
     is_first_round = previous_responses is None
     round_type = "independent" if is_first_round else "reaction"
+
+    # Build an optional preamble from user_context and exclusions so every
+    # debater in every round sees them — including when --seed is provided.
+    preamble_parts = []
+    if user_context:
+        preamble_parts.append(f"Builder context: {user_context}")
+    if exclusions:
+        excl_list = "\n".join(f"- {e}" for e in exclusions)
+        preamble_parts.append(f"Existing projects to avoid:\n{excl_list}")
+    preamble = "\n\n".join(preamble_parts) + "\n\n" if preamble_parts else ""
 
     futures = {}
 
@@ -173,13 +189,14 @@ def run_round(
             system = ROLE_SYSTEM_PROMPTS[role]
 
             if is_first_round:
-                user = f"Here is the idea to evaluate:\n\n{seed_idea}"
+                user = preamble + f"Here is the idea to evaluate:\n\n{seed_idea}"
             else:
                 context = _build_reaction_context(previous_responses, role)
                 own_previous = next((r for r in previous_responses if r.role == role), None)
                 own_previous_text = own_previous.raw if own_previous else ""
 
                 user = (
+                    preamble +
                     f"Here is the idea being evaluated:\n\n{seed_idea}\n\n"
                     f"Your previous response:\n\n{own_previous_text}\n\n"
                     f"Other council members' responses:\n\n{context}\n\n"
@@ -196,6 +213,7 @@ def run_round(
                 user,
                 max_tokens,
                 provider_events,
+                not is_first_round,  # is_reaction
             )
             futures[future] = role
 

@@ -1,8 +1,7 @@
-import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from idea_council.providers.adapter import ProviderAdapter
-from idea_council.roles.prompts import SEED_GENERATOR, FINAL_SYNTHESIS
+from idea_council.roles.prompts import SEED_GENERATOR
 
 
 def _generate_one_seed(adapter: ProviderAdapter, domain: str, exclusions: list[str], max_tokens: int) -> str:

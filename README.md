@@ -21,9 +21,9 @@ Council lineup assigned  (roles shuffled randomly each run)
         ↓
 Round 1 — Independent analysis  (all debaters run in parallel, no visibility into each other)
         ↓
-Synthesizer: continue or done?
-        ↓
 Round 2+ — Reaction  (each debater sees others' responses, anonymized as Debater A/B/C)
+        ↓   ↑
+Synthesizer: continue or done?  (checked after Round 2+, not Round 1)
         ↓
 Market verification  (GitHub + Tavily search, synthesizer scores openness 1–10)
         ↓
@@ -36,8 +36,16 @@ Final synthesis  →  verdict + opportunity score + kill conditions
 
 **Two input modes:**
 
+At startup, if `--seed` is not provided, the CLI asks:
+
+```
+How would you like to start?
+  [1] Mode A — council generates the seed idea
+  [2] Mode B — provide your own seed idea
+```
+
 - **Mode A** — provide a domain, the council generates and selects the seed idea
-- **Mode B** — provide a domain and seed, skip straight to the debate
+- **Mode B** — enter a seed idea interactively (or pass `--seed` as a flag to skip the prompt)
 
 ---
 
@@ -135,10 +143,14 @@ uv run idea-council --domain "fintech" --rounds 5
 
 ## Output
 
-During the session, a live spinner shows the current phase and elapsed time:
+During the session, a live spinner shows the current phase and elapsed time. Each debater also gets its own row that spins while it is thinking and shows a checkmark when done:
 
 ```
 ⠋ Round 1 — independent analysis (4 debaters)...   0:00:18
+  ✓ Optimist           anthropic/claude-sonnet-4-6   0:00:04
+  ⠙ Critic             ollama/qwen3.5:35b             0:00:18
+  ✓ Devils Advocate    ollama/mistral:7b              0:00:06
+  ✓ Domain Expert      ollama/llama3.1:8b             0:00:05
 ```
 
 At the start of each session (and before any reframe round), the council lineup is printed:

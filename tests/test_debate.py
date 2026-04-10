@@ -181,3 +181,123 @@ def test_run_round_uses_fallback_when_primary_fails():
     )
 
     assert any("fallback" in event for event in provider_events)
+
+
+# --- Reaction round parsing ---
+
+SAMPLE_REACTION_NO_NEW_ARGS = """POSITION: My position is unchanged — the data access risk remains the primary blocker.
+RESPONSE TO OTHERS:
+- Debater A argues user demand is strong, but demand is irrelevant if gig platforms refuse to share data.
+NEW ARGUMENTS:
+POINTS CONCEDED:
+- Debater B is correct that regulatory risk is secondary to the data partnership problem.
+CONFIDENCE: 8"""
+
+
+def test_reaction_round_with_no_new_arguments_does_not_trigger_repair():
+    """A reaction response that skips NEW ARGUMENTS is valid — no repair event should fire."""
+    debaters = {
+        "optimist": MockAdapter("anthropic", "claude", SAMPLE_REACTION_NO_NEW_ARGS),
+        "critic": MockAdapter("ollama", "qwen", SAMPLE_REACTION_NO_NEW_ARGS),
+    }
+    fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    provider_events = []
+    previous = [
+        RoleResponse("optimist", "anthropic", "claude", "pos", ["arg"], 7, SAMPLE_DEBATER_RESPONSE),
+        RoleResponse("critic", "ollama", "qwen", "pos", ["arg"], 8, SAMPLE_CRITIC_RESPONSE),
+    ]
+
+    run_round(
+        round_number=2,
+        assignment=debaters,
+        seed_idea="A credit score API for gig workers.",
+        fallback=fallback,
+        max_tokens=512,
+        provider_events=provider_events,
+        previous_responses=previous,
+    )
+
+    assert not any("repair" in event for event in provider_events)
+
+
+def test_first_round_missing_arguments_still_triggers_repair():
+    """Round 1 is not a reaction round — missing arguments must still fire repair."""
+    no_args_response = "POSITION: This has potential.\nCONFIDENCE: 6"
+    debaters = {
+        "optimist": MockAdapter("anthropic", "claude", no_args_response),
+        "critic": MockAdapter("ollama", "qwen", SAMPLE_CRITIC_RESPONSE),
+    }
+    fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    provider_events = []
+
+    run_round(
+        round_number=1,
+        assignment=debaters,
+        seed_idea="A credit score API for gig workers.",
+        fallback=fallback,
+        max_tokens=512,
+        provider_events=provider_events,
+    )
+
+    assert any("repair" in event for event in provider_events)
+
+
+# --- user_context and exclusions in prompts ---
+
+def test_user_context_appears_in_debater_prompt():
+    adapter = MockAdapter("anthropic", "claude", SAMPLE_DEBATER_RESPONSE)
+    fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+
+    run_round(
+        round_number=1,
+        assignment={"optimist": adapter},
+        seed_idea="A credit score API for gig workers.",
+        fallback=fallback,
+        max_tokens=512,
+        provider_events=[],
+        user_context="I have 5 years in fintech compliance.",
+    )
+
+    assert "I have 5 years in fintech compliance." in adapter.last_user
+
+
+def test_exclusions_appear_in_debater_prompt():
+    adapter = MockAdapter("anthropic", "claude", SAMPLE_DEBATER_RESPONSE)
+    fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+
+    run_round(
+        round_number=1,
+        assignment={"optimist": adapter},
+        seed_idea="A credit score API for gig workers.",
+        fallback=fallback,
+        max_tokens=512,
+        provider_events=[],
+        exclusions=["CreditKarma", "Nova Credit"],
+    )
+
+    assert "CreditKarma" in adapter.last_user
+    assert "Nova Credit" in adapter.last_user
+
+
+def test_context_and_exclusions_appear_in_reaction_round_prompt():
+    """Both context and exclusions must survive into reaction rounds."""
+    adapter = MockAdapter("anthropic", "claude", SAMPLE_REACTION_NO_NEW_ARGS)
+    fallback = MockAdapter("anthropic", "claude-haiku", SAMPLE_DEBATER_RESPONSE)
+    previous = [
+        RoleResponse("optimist", "anthropic", "claude", "pos", ["arg"], 7, SAMPLE_DEBATER_RESPONSE),
+    ]
+
+    run_round(
+        round_number=2,
+        assignment={"optimist": adapter},
+        seed_idea="A credit score API for gig workers.",
+        fallback=fallback,
+        max_tokens=512,
+        provider_events=[],
+        previous_responses=previous,
+        user_context="Solo dev, no legal budget.",
+        exclusions=["CreditKarma"],
+    )
+
+    assert "Solo dev, no legal budget." in adapter.last_user
+    assert "CreditKarma" in adapter.last_user

@@ -1,6 +1,6 @@
 # idea-council — Product Requirements Document
 
-**Version:** 1.3  
+**Version:** 1.4  
 **Date:** 2026-04-09  
 **Status:** Draft
 
@@ -100,22 +100,23 @@ Two modes are supported. The debate loop is identical in both — the only diffe
 - Chosen seed and rejected seeds are recorded in the session
 
 **Mode B — User-provided seed**
-- User provides domain and seed: `--domain "fintech" --seed "a credit score API for gig workers"`
+- User provides domain and seed via flag (`--seed "..."`) or enters it interactively when the CLI prompts at startup
+- If `--seed` is omitted, the CLI asks: `[1] Mode A — council generates the seed idea` / `[2] Mode B — provide your own seed idea`
 - Seed phase is skipped entirely
 - Council proceeds directly to role assignment and Round 1
 - Use case: pressure-test an idea you already have
 
 **Optional input modifiers (apply to both modes):**
 
-`--exclude` — projects or URLs to treat as already existing. Passed to the council before seed generation (Mode A) or before Round 1 (Mode B) with the instruction: "These already exist in this domain. Do not generate ideas similar to them."
+`--exclude` — projects or URLs to treat as already existing. Included in every debater's prompt in every round (seed generation in Mode A, and all debate rounds in both modes) with the instruction: "Existing projects to avoid."
 - Accepts comma-separated names, URLs, or short descriptions
 - Example: `--exclude "github.com/foo/bar, OpenRouter, LiteLLM"`
 - Does not bias the direction — only narrows the space
 
-`--context` — personal background about the user. Passed to the council as grounding so generated ideas align with what the user can actually build.
+`--context` — personal background about the user. Passed to every debater in every round so generated ideas and arguments align with what the user can actually build.
 - Example: `--context "15 years in set-top box middleware, now applying that to AI tooling"`
 - Influences direction but does not anchor to specific ideas
-- Not included in the anonymized debater context — only the synthesizer and seed generator see it
+- Included in the user prompt for all debate rounds (first-round and reaction) as a preamble: `Builder context: <value>`
 
 ### 7.2 Seed Phase (Mode A only)
 - All available debater providers generate a seed idea independently and in parallel
@@ -155,7 +156,7 @@ After each round, the synthesizer reads all debater responses and returns one of
 - `continue` — new arguments are still emerging, positions are still shifting
 - `done` — positions have stabilized, no substantively new arguments in the last round
 
-The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. This adds one synthesizer API call per round but produces the most honest exit — a judge watching a debate knows when it is over.
+The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. The exit check is skipped after Round 1 — independent analysis has no reactions yet, so signaling `done` at that point would always be premature. The first check runs after Round 2. This adds one synthesizer API call per reaction round but produces the most honest exit — a judge watching a debate knows when it is over.
 
 **Options considered and rejected:**
 
@@ -203,7 +204,7 @@ Runs after the final debate round, before synthesis. Both sources are optional �
 | 4–6 | moderate competition | Pause session — show findings and prompt user to choose |
 | 1–3 | crowded | Auto-trigger reframe round — council finds the gap without user input |
 
-**User prompt for score 5–7:**
+**User prompt for score 4–6:**
 ```
 Market verification found moderate competition (score: X/10).
 
@@ -216,7 +217,7 @@ Market verification found moderate competition (score: X/10).
   [3] Abandon  — exit session
 ```
 
-**Reframe round (triggered by score 8–10 or user selecting [2]):**
+**Reframe round (triggered by score 1–3 or user selecting [2]):**
 - Competitor hits are passed back to the full council
 - Each debater receives: the original seed idea + competitor list + prompt: "These already exist. What angle is missing? What did none of them solve?"
 - Council runs one additional round in parallel (no further exit-condition check)
@@ -272,14 +273,16 @@ FinalReport
 ├── fatal_flaw          (str)
 ├── kill_conditions     (list[str])
 ├── what_must_be_true   (list[str])
-├── market_openness     (int 1–10 | null if search skipped — higher = more open space)
-├── remaining_gap       (str | null — gap in the market identified by synthesizer, if any)
-├── github_hits         (list[str] — repo URLs from GitHub search)
-├── web_hits            (list[str] — URLs from Tavily web search)
-├── competitor_hits     (list[str] — combined deduplicated URLs from all sources)
-├── pivot_triggered     (bool — true if pivot round ran)
-├── pivot_seed          (str | null — new seed produced by pivot round, if triggered)
-├── user_choice         (str | null — "proceed" | "pivot" | "abandon", set when score 5–7)
+├── market
+│   ├── market_openness     (int 1–10 | null if search skipped — higher = more open space)
+│   ├── remaining_gap       (str | null — gap in the market identified by synthesizer, if any)
+│   ├── github_hits         (list[str] — repo URLs from GitHub search)
+│   ├── web_hits            (list[str] — URLs from Tavily web search)
+│   ├── competitor_hits     (list[str] — combined deduplicated URLs from all sources)
+│   └── skipped             (bool — true if neither search source was configured)
+├── pivot_triggered     (bool — true if reframe round ran)
+├── pivot_seed          (str | null — reframe prompt passed to council, if triggered)
+├── user_choice         (str | null — "proceed" | "reframe" | "abandon", set when score 4–6)
 └── provider_events     (list[str] — fallback/skip/repair events during session)
 
 DebateRound
@@ -364,23 +367,22 @@ src/idea_council/
 ├── config/
 │   └── settings.py           # Loads all provider keys + model names from .env
 ├── models/
-│   └── session.py            # RoleResponse, DebateRound, FinalReport dataclasses
+│   └── session.py            # RoleResponse, DebateRound, MarketVerification, FinalReport
 ├── providers/
-│   ├── registry.py           # Builds list of active Provider objects from settings
-│   ├── adapter.py            # Base adapter + AnthropicAdapter, OllamaAdapter
-│   └── openai_adapter.py     # Optional — OpenAI + Google (OpenAI-compatible)
+│   ├── adapter.py            # Base adapter + Anthropic, Ollama, OpenAI, Google adapters
+│   └── registry.py           # Builds active provider list from settings
 ├── roles/
-│   └── prompts.py            # System prompt per role
+│   └── prompts.py            # System prompts for each role and the synthesizer
 ├── orchestrator/
-│   ├── rotation.py           # Shuffle roles → providers each run
+│   ├── rotation.py           # Shuffles roles → providers each run
 │   ├── seed.py               # Parallel seed generation + selection
-│   ├── debate.py             # Round 1 and Round 2 execution
-│   ├── market.py             # GitHub + Tavily search — market verification step
-│   └── synthesizer.py        # Final report generation
-├── utils/
-│   └── formatting.py         # Rich terminal output
+│   ├── debate.py             # Round execution, fallback, repair
+│   ├── market.py             # GitHub + Tavily search and interpretation
+│   ├── synthesizer.py        # Exit check, pivot prompt, final report generation
+│   └── council.py            # Session orchestration
+├── utils/                    # (reserved for future shared utilities)
 └── cli/
-    └── cli.py                # typer: --domain, --verbose, --rounds
+    └── cli.py                # Typer CLI entry point
 ```
 
 ---
@@ -489,8 +491,8 @@ Defines expected behavior when the session runs with fewer than ideal resources.
 | Tavily unconfigured | Tavily web search is skipped; GitHub search still runs if enabled |
 | GitHub search disabled | GitHub search is skipped; Tavily still runs if configured |
 | Both search sources unavailable | Market verification step skipped entirely; `market_openness`, `remaining_gap`, `github_hits`, `web_hits`, `competitor_hits` are all `null` |
-| User selects Abandon (score 5–7) | Session exits cleanly; partial report written to `output/` with `user_choice: "abandon"` |
-| User selects Reframe (score 5–7) | Council runs one additional reframe round; session continues to synthesis |
+| User selects Abandon (score 4–6) | Session exits cleanly; partial report written to `output/` with `user_choice: "abandon"` |
+| User selects Reframe (score 4–6) | Council runs one additional reframe round; session continues to synthesis |
 | All Ollama models fail mid-session | Provider marked unavailable; remaining rounds continue with remaining debaters |
 | Max rounds reached before `done` signal | Session exits with `exit_reason: "max_rounds_reached"`; synthesis runs on available rounds |
 

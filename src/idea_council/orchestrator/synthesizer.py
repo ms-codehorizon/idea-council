@@ -1,6 +1,5 @@
-import re
 
-from idea_council.models.session import DebateRound, FinalReport, MarketVerification, RoleResponse
+from idea_council.models.session import DebateRound, FinalReport, MarketVerification
 from idea_council.orchestrator.debate import _strip_thinking_tags
 from idea_council.providers.adapter import ProviderAdapter
 from idea_council.roles.prompts import (

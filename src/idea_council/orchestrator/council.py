@@ -4,7 +4,7 @@ import os
 from datetime import datetime, UTC
 
 from idea_council.config.settings import load_settings
-from idea_council.models.session import FinalReport, MarketVerification
+from idea_council.models.session import FinalReport
 from idea_council.providers.registry import build_debaters, build_fallback, build_synthesizer
 from idea_council.orchestrator.rotation import assign_roles, describe_assignments
 from idea_council.orchestrator.seed import generate_seeds
@@ -141,20 +141,22 @@ def run_session(
     if ask_user_fn is None:
         ask_user_fn = _default_ask_user
 
+    def _noop_one(*args):
+        pass
+
+    def _noop_role(*args):
+        pass
+
     if on_progress is None:
-        on_progress = lambda msg: None
-
+        on_progress = _noop_one
     if on_roles_assigned is None:
-        on_roles_assigned = lambda assignments: None
-
+        on_roles_assigned = _noop_one
     if on_reframe_started is None:
-        on_reframe_started = lambda assignments: None
-
+        on_reframe_started = _noop_one
     if on_debater_start is None:
-        on_debater_start = lambda role, provider, model: None
-
+        on_debater_start = _noop_role
     if on_debater_done is None:
-        on_debater_done = lambda role, provider, model: None
+        on_debater_done = _noop_role
 
     if exclusions is None:
         exclusions = []
@@ -216,6 +218,8 @@ def run_session(
             previous_responses=previous_responses,
             on_debater_start=on_debater_start,
             on_debater_done=on_debater_done,
+            user_context=user_context,
+            exclusions=exclusions,
         )
 
         # Check exit condition only after reaction rounds (not after round 1)
@@ -288,6 +292,8 @@ def run_session(
                 previous_responses=previous_responses,
                 on_debater_start=on_debater_start,
                 on_debater_done=on_debater_done,
+                user_context=user_context,
+                exclusions=exclusions,
             )
             pivot_round.synthesizer_signal = "not_checked"
             rounds.append(pivot_round)
@@ -345,6 +351,8 @@ def run_session(
                     previous_responses=previous_responses,
                     on_debater_start=on_debater_start,
                     on_debater_done=on_debater_done,
+                    user_context=user_context,
+                    exclusions=exclusions,
                 )
                 pivot_round.synthesizer_signal = "not_checked"
                 rounds.append(pivot_round)
