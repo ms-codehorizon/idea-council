@@ -34,6 +34,7 @@ Existing frameworks (AutoGen, LangGraph, CrewAI) solve this in the general case 
 - Multi-agent debate as a reasoning technique: Du et al., ICML 2024
 - Multi-agent frameworks: AutoGen (Microsoft), CrewAI, CAMEL, LangGraph
 - AI idea validation products: aicofounder, FounderFlow, Found3r, CoFounder.im
+- Direct inspiration for the council concept: [karpathy/llm-council](https://github.com/karpathy/llm-council) — a web app that queries multiple LLMs via OpenRouter and synthesizes their responses; this project replaces the peer-review model with assigned debate roles, targets product ideation specifically, and adds local model support and market verification
 
 **Differentiation (engineering, not concept):**
 - No framework dependency — orchestration is hand-coded and readable
