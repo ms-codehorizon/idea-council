@@ -1,8 +1,8 @@
 # idea-council
 
-A local-first CLI that surfaces the full argument landscape for a product idea — fast, before you spend time talking to humans who will. Every session produces an **inspectable JSON transcript** — version it in git, pipe it through `jq`, diff runs side-by-side, or feed it into downstream tooling. No SaaS dependency. No data sent to third parties.
+A local-first CLI that surfaces the full argument landscape for a product idea - fast, before you spend time talking to humans who will. Every session produces an **inspectable JSON transcript** - version it in git, pipe it through `jq`, diff runs side-by-side, or feed it into downstream tooling. No SaaS dependency. No data sent to third parties.
 
-Models argue from rotating assigned roles — Optimist, Critic, Devil's Advocate, Domain Expert — and a synthesizer produces a structured verdict with optional market-search grounding. The goal is enumerable, named arguments you can act on, not a substitute for expert feedback.
+Models argue from rotating assigned roles - Optimist, Critic, Devil's Advocate, Domain Expert - and a synthesizer produces a structured verdict with optional market-search grounding. The goal is enumerable, named arguments you can act on, not a substitute for expert feedback.
 
 ---
 
@@ -21,11 +21,11 @@ Domain / Seed idea
         ↓
 Council lineup assigned  (roles shuffled randomly each run)
         ↓
-Round 1 — Independent analysis  (all debaters run in parallel, no visibility into each other)
+Round 1 - Independent analysis  (all debaters run in parallel, no visibility into each other)
         ↓
-Round 2 — First reaction  (no exit check yet — one exchange is not enough to judge convergence)
+Round 2 - First reaction  (no exit check yet - one exchange is not enough to judge convergence)
         ↓
-Round 3+ — Reaction  (each debater sees others' responses, anonymized as Debater A/B/C)
+Round 3+ - Reaction  (each debater sees others' responses, anonymized as Debater A/B/C)
         ↓   ↑
 Synthesizer: continue or done?  (first check after Round 3; minimum 2 reaction rounds always run)
         ↓
@@ -44,12 +44,12 @@ At startup, if `--seed` is not provided, the CLI asks:
 
 ```
 How would you like to start?
-  [1] Mode A — council generates the seed idea
-  [2] Mode B — provide your own seed idea
+  [1] Mode A - council generates the seed idea
+  [2] Mode B - provide your own seed idea
 ```
 
-- **Mode A** — provide a domain, the council generates and selects the seed idea. After generation, the CLI shows the chosen seed and asks you to confirm or replace it before the debate starts.
-- **Mode B** — enter a seed idea interactively (or pass `--seed` as a flag to skip the prompt)
+- **Mode A** - provide a domain, the council generates and selects the seed idea. After generation, the CLI shows the chosen seed and asks you to confirm or replace it before the debate starts.
+- **Mode B** - enter a seed idea interactively (or pass `--seed` as a flag to skip the prompt)
 
 ---
 
@@ -62,7 +62,7 @@ How would you like to start?
 | OpenAI | Cloud | Debater | No |
 | Google Gemini | Cloud | Debater | No |
 
-Ollama runs locally with no API cost. The synthesizer is always Anthropic — it is the only model that sees full attribution (role → provider → model) and produces the final verdict.
+Ollama runs locally with no API cost. The synthesizer is always Anthropic - it is the only model that sees full attribution (role → provider → model) and produces the final verdict.
 
 Role assignments are shuffled randomly each run. No provider is permanently anchored to a personality.
 
@@ -110,14 +110,14 @@ GOOGLE_MODEL=gemini-2.0-flash
 # Market verification
 GITHUB_SEARCH_ENABLED=true
 GITHUB_SEARCH_MAX_RESULTS=10
-TAVILY_API_KEY=          # optional — web search skipped if not set
+TAVILY_API_KEY=          # optional - web search skipped if not set
 
 # Session
 MAX_TOKENS_PER_CALL=2048
 OUTPUT_DIR=output
 ```
 
-GitHub search uses the `gh` CLI token — no separate key required. Run `gh auth login` if you haven't already.
+GitHub search uses the `gh` CLI token - no separate key required. Run `gh auth login` if you haven't already.
 
 ---
 
@@ -152,7 +152,7 @@ uv run idea-council --domain "fintech" --rounds 5
 During the session, a live spinner shows the current phase and elapsed time. Each debater also gets its own row that spins while it is thinking and shows a checkmark when done:
 
 ```
-⠋ Round 1 — independent analysis (4 debaters)...   0:00:18
+⠋ Round 1 - independent analysis (4 debaters)...   0:00:18
   ✓ Optimist           anthropic/claude-sonnet-4-6   0:00:04
   ⠙ Critic             ollama/qwen3.5:35b             0:00:18
   ✓ Devils Advocate    ollama/mistral:7b              0:00:06
@@ -217,8 +217,8 @@ Both scores use the same 1–10 scale where higher is always better:
 | Market Openness | Action |
 |-----------------|--------|
 | 7–10 (open space) | Proceed to synthesis automatically |
-| 4–6 (moderate competition) | Pause — show findings, ask: proceed / reframe / abandon |
-| 1–3 (crowded) | Auto-reframe — council finds the gap without user input |
+| 4–6 (moderate competition) | Pause - show findings, ask: proceed / reframe / abandon |
+| 1–3 (crowded) | Auto-reframe - council finds the gap without user input |
 
 When reframe is triggered, roles are reshuffled across providers and the new council receives the competitor list and is asked: *"These already exist. What angle is missing? What did none of them solve?"* The reframe lineup and a 2-line preview of the gap question are shown before the round starts.
 
@@ -263,7 +263,7 @@ FinalReport
 
 | Condition | Behavior |
 |-----------|----------|
-| 1 debater available | Session aborts — minimum 2 required |
+| 1 debater available | Session aborts - minimum 2 required |
 | 2 debaters available | Runs with Optimist + Critic only |
 | 3 debaters available | Drops lowest-priority role |
 | Ollama unreachable | Skipped at startup with a warning |
@@ -282,7 +282,7 @@ uv run pytest
 uv run pytest --cov=idea_council
 ```
 
-Tests use mocked adapters — no real API calls required.
+Tests use mocked adapters - no real API calls required.
 
 ---
 
