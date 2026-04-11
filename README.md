@@ -1,6 +1,8 @@
 # idea-council
 
-A CLI tool that stages a structured debate between multiple LLM providers to evaluate and pressure-test product ideas. Models argue from rotating assigned roles — Optimist, Critic, Devil's Advocate, Domain Expert — and a synthesizer produces a structured verdict with optional market-search grounding.
+A local-first CLI that surfaces the full argument landscape for a product idea — fast, before you spend time talking to humans who will. Every session produces an **inspectable JSON transcript** — version it in git, pipe it through `jq`, diff runs side-by-side, or feed it into downstream tooling. No SaaS dependency. No data sent to third parties.
+
+Models argue from rotating assigned roles — Optimist, Critic, Devil's Advocate, Domain Expert — and a synthesizer produces a structured verdict with optional market-search grounding. The goal is enumerable, named arguments you can act on, not a substitute for expert feedback.
 
 ---
 

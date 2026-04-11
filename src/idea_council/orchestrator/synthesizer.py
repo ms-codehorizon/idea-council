@@ -56,8 +56,8 @@ def generate_reframe_prompt(
     """
     competitor_list = "\n".join(f"- {url}" for url in competitor_hits)
     user = (
-        f"Original idea:\n\n{seed_idea}\n\n"
-        f"Existing competitors or similar projects:\n{competitor_list}"
+        f"Original idea:\n\n<idea>{seed_idea}</idea>\n\n"
+        f"Existing competitors or similar projects:\n<competitors>{competitor_list}</competitors>"
     )
 
     return synthesizer.call(
@@ -138,7 +138,7 @@ def produce_final_report(
         )
 
     user = (
-        f"Idea being evaluated:\n\n{seed_idea}\n\n"
+        f"Idea being evaluated:\n\n<idea>{seed_idea}</idea>\n\n"
         f"{''.join(rounds_text)}"
         f"{market_section}"
     )
@@ -196,7 +196,7 @@ def generate_proposal(
             )
 
     user = (
-        f"Idea: {idea}\n\n"
+        f"Idea: <idea>{idea}</idea>\n\n"
         f"Domain: {report.domain}\n"
         f"Verdict: {report.verdict}\n"
         f"Opportunity score: {report.opportunity_score}/10\n"

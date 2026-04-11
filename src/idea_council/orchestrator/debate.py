@@ -187,10 +187,12 @@ def run_round(
     # debater in every round sees them — including when --seed is provided.
     preamble_parts = []
     if user_context:
-        preamble_parts.append(f"Builder context: {user_context}")
+        preamble_parts.append(f"Builder context:\n<context>{user_context}</context>")
     if exclusions:
         excl_list = "\n".join(f"- {e}" for e in exclusions)
-        preamble_parts.append(f"Existing projects to avoid:\n{excl_list}")
+        preamble_parts.append(
+            f"Existing projects to avoid:\n<exclusions>{excl_list}</exclusions>"
+        )
     preamble = "\n\n".join(preamble_parts) + "\n\n" if preamble_parts else ""
 
     futures = {}
@@ -200,7 +202,10 @@ def run_round(
             system = ROLE_SYSTEM_PROMPTS[role]
 
             if is_first_round:
-                user = preamble + f"Here is the idea to evaluate:\n\n{seed_idea}"
+                user = (
+                    preamble
+                    + f"Here is the idea to evaluate:\n\n<idea>{seed_idea}</idea>"
+                )
             else:
                 context = _build_reaction_context(previous_responses, role)
                 own_previous = next(
@@ -209,9 +214,10 @@ def run_round(
                 own_previous_text = own_previous.raw if own_previous else ""
 
                 user = (
-                    preamble + f"Here is the idea being evaluated:\n\n{seed_idea}\n\n"
-                    f"Your previous response:\n\n{own_previous_text}\n\n"
-                    f"Other council members' responses:\n\n{context}\n\n"
+                    preamble
+                    + f"Here is the idea being evaluated:\n\n<idea>{seed_idea}</idea>\n\n"
+                    f"Your previous response:\n\n<your_previous_response>{own_previous_text}</your_previous_response>\n\n"
+                    f"Other council members' responses:\n\n<other_responses>{context}</other_responses>\n\n"
                     f"{prompts.REACTION_INSTRUCTIONS}"
                 )
 
