@@ -30,7 +30,7 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
     Returns the list of active debater adapters based on what is configured
     and available. Anthropic is always included if the key is present.
     Ollama adapters are only added for models that are actually pulled and
-    ready — configured-but-missing models are skipped with a warning.
+    ready - configured-but-missing models are skipped with a warning.
     OpenAI and Google are included if their keys are set.
     """
     debaters = []
@@ -43,13 +43,13 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
         )
     )
 
-    # Ollama debaters — check which models are actually available
+    # Ollama debaters - check which models are actually available
     if settings.ollama_models:
         available = _get_available_ollama_models(settings.ollama_base_url)
 
         if not available:
             print(
-                f"[warning] Ollama not reachable at {settings.ollama_base_url} — skipping local models"
+                f"[warning] Ollama not reachable at {settings.ollama_base_url} - skipping local models"
             )
         else:
             for model in settings.ollama_models:
@@ -67,7 +67,7 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
                     )
                 else:
                     print(
-                        f"[warning] Ollama model '{model}' is not pulled — skipping. Run: ollama pull {model}"
+                        f"[warning] Ollama model '{model}' is not pulled - skipping. Run: ollama pull {model}"
                     )
 
     # OpenAI debater
@@ -94,7 +94,7 @@ def build_debaters(settings: Settings) -> list[ProviderAdapter]:
 def build_synthesizer(settings: Settings) -> ProviderAdapter:
     """
     The synthesizer is always Anthropic. It is a separate adapter instance
-    from the debater — same provider, distinct invocation and system prompt.
+    from the debater - same provider, distinct invocation and system prompt.
     """
     return AnthropicAdapter(
         model=settings.anthropic_model,

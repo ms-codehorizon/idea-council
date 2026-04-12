@@ -97,7 +97,7 @@ def _interpret_results(
             stars = repo.get("stargazersCount", 0)
             desc = repo.get("description", "no description")
             url = repo.get("url", "")
-            lines.append(f"- {repo['name']} ({stars} stars): {desc} — {url}")
+            lines.append(f"- {repo['name']} ({stars} stars): {desc} - {url}")
         github_section = "GitHub repositories found:\n" + "\n".join(lines)
     else:
         github_section = "GitHub repositories found: none"
@@ -106,7 +106,7 @@ def _interpret_results(
     if web_results:
         lines = []
         for item in web_results:
-            lines.append(f"- {item['title']} — {item['url']}")
+            lines.append(f"- {item['title']} - {item['url']}")
         web_section = "Web search results:\n" + "\n".join(lines)
     else:
         web_section = "Web search results: none"

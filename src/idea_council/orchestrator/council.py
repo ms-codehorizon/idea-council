@@ -30,14 +30,14 @@ def _default_ask_user(
     """
     if seed_idea:
         print(f"\nIdea being evaluated:\n{seed_idea}")
-    print(f"\nMarket openness: {score}/10 — moderate competition found.")
+    print(f"\nMarket openness: {score}/10 - moderate competition found.")
     print("\nTop hits:")
     for url in competitor_hits[:5]:
         print(f"  - {url}")
     print("\nHow would you like to proceed?")
-    print("  [1] Proceed  — synthesize this idea as-is")
-    print("  [2] Reframe  — council finds the gap in the market")
-    print("  [3] Abandon  — exit session")
+    print("  [1] Proceed  - synthesize this idea as-is")
+    print("  [2] Reframe  - council finds the gap in the market")
+    print("  [3] Abandon  - exit session")
 
     while True:
         choice = input("\nEnter choice (1/2/3): ").strip()
@@ -231,7 +231,7 @@ def run_session(
     for round_number in range(1, max_rounds + 1):
         round_type = "independent analysis" if round_number == 1 else "reaction"
         on_progress(
-            f"Round {round_number} — {round_type} ({len(assignment)} debaters)..."
+            f"Round {round_number} - {round_type} ({len(assignment)} debaters)..."
         )
 
         debate_round = run_round(
@@ -249,7 +249,7 @@ def run_session(
         )
 
         # Exit check: skip round 1 (independent, no reactions yet) and round 2
-        # (first reaction — one exchange is not enough to judge convergence).
+        # (first reaction - one exchange is not enough to judge convergence).
         # First possible check is round 3. Also skip on the final allowed round
         # so the synthesizer only stops an in-progress debate, not a finished one.
         if round_number > 2 and round_number < max_rounds:
@@ -344,7 +344,7 @@ def run_session(
             reframe_seed = reframe_prompt
 
         elif score <= 6:
-            # Ask user what to do — moderate competition
+            # Ask user what to do - moderate competition
             user_choice = ask_user_fn(score, market.competitor_hits, chosen_seed)
 
             if user_choice == "abandon":

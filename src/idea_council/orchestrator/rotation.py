@@ -3,7 +3,7 @@ import random
 from idea_council.providers.adapter import ProviderAdapter
 
 
-# Roles in priority order — when fewer than 4 debaters are available,
+# Roles in priority order - when fewer than 4 debaters are available,
 # roles are dropped from the bottom of this list first.
 ROLES = ["optimist", "critic", "devils_advocate", "domain_expert"]
 

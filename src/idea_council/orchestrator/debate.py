@@ -111,7 +111,7 @@ def _call_debater(
             f"The following response did not follow the required format. "
             f"Please rewrite it in the correct format.\n\nOriginal response:\n{raw}"
         )
-        event = f"[repair] {used_adapter.provider}/{used_adapter.model} response for role '{role}' did not parse — retrying with repair prompt"
+        event = f"[repair] {used_adapter.provider}/{used_adapter.model} response for role '{role}' did not parse - retrying with repair prompt"
         provider_events.append(event)
         try:
             raw = used_adapter.call(
@@ -121,7 +121,7 @@ def _call_debater(
             arguments = _parse_arguments(raw)
             confidence = _parse_confidence(raw)
         except Exception:
-            event = f"[repair-failed] {used_adapter.provider}/{used_adapter.model} repair also failed — storing raw response"
+            event = f"[repair-failed] {used_adapter.provider}/{used_adapter.model} repair also failed - storing raw response"
             provider_events.append(event)
 
     return RoleResponse(
@@ -140,7 +140,7 @@ def _build_reaction_context(
 ) -> str:
     """
     Builds the anonymized context for a reaction round.
-    Other debaters are labeled Debater A, B, C — not by provider or model name.
+    Other debaters are labeled Debater A, B, C - not by provider or model name.
     Only role labels are preserved.
     """
     other_responses = [r for r in round_responses if r.role != current_role]
@@ -184,7 +184,7 @@ def run_round(
     round_type = "independent" if is_first_round else "reaction"
 
     # Build an optional preamble from user_context and exclusions so every
-    # debater in every round sees them — including when --seed is provided.
+    # debater in every round sees them - including when --seed is provided.
     preamble_parts = []
     if user_context:
         preamble_parts.append(f"Builder context:\n<context>{user_context}</context>")

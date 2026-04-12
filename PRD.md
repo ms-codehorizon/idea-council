@@ -1,26 +1,26 @@
-# idea-council — Product Requirements Document
+# idea-council - Product Requirements Document
 
 **Version:** 1.4  
 **Date:** 2026-04-10  
-**Status:** Active — v1 implemented, CI/CD in place, open for iteration
+**Status:** Active - v1 implemented, CI/CD in place, open for iteration
 
 ---
 
 ## 1. Overview
 
-`idea-council` is a reproducible, inspectable CLI implementation of multi-provider LLM debate for early product ideation. The user provides a domain or theme — the models generate or evaluate a seed idea, argue over it from rotating assigned roles, and a synthesizer produces a structured verdict with optional market-search grounding.
+`idea-council` is a reproducible, inspectable CLI implementation of multi-provider LLM debate for early product ideation. The user provides a domain or theme - the models generate or evaluate a seed idea, argue over it from rotating assigned roles, and a synthesizer produces a structured verdict with optional market-search grounding.
 
 The multi-agent debate pattern is established research (Du et al., ICML 2024). Frameworks like AutoGen and CrewAI support multi-agent role workflows. AI cofounder products already exist. This project does not claim to be first in any of those categories.
 
-What it is: a clean, self-contained CLI implementation that combines multi-provider support (cloud + local Ollama), LLM-generated seeds, role rotation, provider fallback, and structured JSON output — without a framework dependency. The value is in the engineering: inspectable adapters, mocked tests, resilient fallbacks, and transcripts that show when and why models disagreed.
+What it is: a clean, self-contained CLI implementation that combines multi-provider support (cloud + local Ollama), LLM-generated seeds, role rotation, provider fallback, and structured JSON output - without a framework dependency. The value is in the engineering: inspectable adapters, mocked tests, resilient fallbacks, and transcripts that show when and why models disagreed.
 
 ---
 
 ## 2. Problem Statement
 
-Single-LLM brainstorming produces ideas that reflect one model's training bias and tendencies. When you ask Claude to critique an idea Claude just generated, the critique is shallow — it's the same "mind" talking to itself.
+Single-LLM brainstorming produces ideas that reflect one model's training bias and tendencies. When you ask Claude to critique an idea Claude just generated, the critique is shallow - it's the same "mind" talking to itself.
 
-Real ideation benefits from genuine disagreement: an optimist who sees only upside, a critic who finds the fatal flaw, a devil's advocate who stress-tests every assumption, a domain expert who judges technical and market feasibility. Assigning those roles to *different* models — models with different training data, sizes, and tendencies — produces tension that a single model cannot simulate.
+Real ideation benefits from genuine disagreement: an optimist who sees only upside, a critic who finds the fatal flaw, a devil's advocate who stress-tests every assumption, a domain expert who judges technical and market feasibility. Assigning those roles to *different* models - models with different training data, sizes, and tendencies - produces tension that a single model cannot simulate.
 
 Existing frameworks (AutoGen, LangGraph, CrewAI) solve this in the general case but require significant setup and hide the orchestration. Existing products (aicofounder, FounderFlow, Found3r) are web-based SaaS with no local model support and no inspectable output. This project occupies the gap: a CLI tool you can run locally, read end-to-end, and extend without a framework.
 
@@ -28,21 +28,21 @@ Existing frameworks (AutoGen, LangGraph, CrewAI) solve this in the general case 
 
 ## 3. Positioning
 
-> A reproducible, inspectable CLI implementation of multi-provider LLM debate for early product ideation — with local model support, role rotation, provider fallback, and optional market-search grounding.
+> A reproducible, inspectable CLI implementation of multi-provider LLM debate for early product ideation - with local model support, role rotation, provider fallback, and optional market-search grounding.
 
 **Prior art acknowledged:**
 - Multi-agent debate as a reasoning technique: Du et al., ICML 2024
 - Multi-agent frameworks: AutoGen (Microsoft), CrewAI, CAMEL, LangGraph
 - AI idea validation products: aicofounder, FounderFlow, Found3r, CoFounder.im
-- Direct inspiration for the council concept: [karpathy/llm-council](https://github.com/karpathy/llm-council) — a web app that queries multiple LLMs via OpenRouter and synthesizes their responses; this project replaces the peer-review model with assigned debate roles, targets product ideation specifically, and adds local model support and market verification
+- Direct inspiration for the council concept: [karpathy/llm-council](https://github.com/karpathy/llm-council) - a web app that queries multiple LLMs via OpenRouter and synthesizes their responses; this project replaces the peer-review model with assigned debate roles, targets product ideation specifically, and adds local model support and market verification
 
 **Differentiation (engineering, not concept):**
-- No framework dependency — orchestration is hand-coded and readable
-- Multi-provider including local Ollama — runs without cloud spend beyond Anthropic
-- Role rotation — no provider is anchored to a personality across runs
-- Provider fallback — sessions survive model failures
-- Structured JSON output — every session is machine-readable and inspectable
-- Mocked test suite — verifiable behavior without real API calls
+- No framework dependency - orchestration is hand-coded and readable
+- Multi-provider including local Ollama - runs without cloud spend beyond Anthropic
+- Role rotation - no provider is anchored to a personality across runs
+- Provider fallback - sessions survive model failures
+- Structured JSON output - every session is machine-readable and inspectable
+- Mocked test suite - verifiable behavior without real API calls
 
 ---
 
@@ -57,7 +57,7 @@ Existing frameworks (AutoGen, LangGraph, CrewAI) solve this in the general case 
 
 ### 4.1 Non-Goals (v1)
 
-- Web UI or API — CLI only in v1
+- Web UI or API - CLI only in v1
 - Persistent memory across sessions
 - Seed-only workflows without a domain are out of scope (domain is always required)
 - Fine-tuning or model training
@@ -91,37 +91,37 @@ Existing frameworks (AutoGen, LangGraph, CrewAI) solve this in the general case 
 
 ### 7.1 Input Modes
 
-Two modes are supported. The debate loop is identical in both — the only difference is whether the seed phase runs.
+Two modes are supported. The debate loop is identical in both - the only difference is whether the seed phase runs.
 
-**Mode A — System-generated seed (default)**
+**Mode A - System-generated seed (default)**
 - User provides only a domain or theme: `--domain "fintech"`
 - All debater providers independently generate a seed idea in parallel
-- Each receives only the domain — no visibility into other seeds
+- Each receives only the domain - no visibility into other seeds
 - The synthesizer picks the most distinctive or divergent seed to carry forward
 - Chosen seed and rejected seeds are recorded in the session
 
-**Mode B — User-provided seed**
+**Mode B - User-provided seed**
 - User provides domain and seed via flag (`--seed "..."`) or enters it interactively when the CLI prompts at startup
-- If `--seed` is omitted, the CLI asks: `[1] Mode A — council generates the seed idea` / `[2] Mode B — provide your own seed idea`
+- If `--seed` is omitted, the CLI asks: `[1] Mode A - council generates the seed idea` / `[2] Mode B - provide your own seed idea`
 - Seed phase is skipped entirely
 - Council proceeds directly to role assignment and Round 1
 - Use case: pressure-test an idea you already have
 
 **Optional input modifiers (apply to both modes):**
 
-`--exclude` — projects or URLs to treat as already existing. Included in every debater's prompt in every round (seed generation in Mode A, and all debate rounds in both modes) with the instruction: "Existing projects to avoid."
+`--exclude` - projects or URLs to treat as already existing. Included in every debater's prompt in every round (seed generation in Mode A, and all debate rounds in both modes) with the instruction: "Existing projects to avoid."
 - Accepts comma-separated names, URLs, or short descriptions
 - Example: `--exclude "github.com/foo/bar, OpenRouter, LiteLLM"`
-- Does not bias the direction — only narrows the space
+- Does not bias the direction - only narrows the space
 
-`--context` — personal background about the user. Passed to every debater in every round so generated ideas and arguments align with what the user can actually build.
+`--context` - personal background about the user. Passed to every debater in every round so generated ideas and arguments align with what the user can actually build.
 - Example: `--context "15 years in set-top box middleware, now applying that to AI tooling"`
 - Influences direction but does not anchor to specific ideas
 - Included in the user prompt for all debate rounds (first-round and reaction) as a preamble: `Builder context: <value>`
 
 ### 7.2 Seed Phase (Mode A only)
 - All available debater providers generate a seed idea independently and in parallel
-- Each receives only the domain — no visibility into other seeds
+- Each receives only the domain - no visibility into other seeds
 - The synthesizer selects the most distinctive or divergent seed to carry forward
 - The chosen seed and the rejected seeds are recorded in the session
 - After generation, the CLI shows the chosen seed and asks the user to confirm or replace it before the debate starts. If the user replaces it, `seed_mode` is set to `"user_provided"`
@@ -131,18 +131,18 @@ Two modes are supported. The debate loop is identical in both — the only diffe
 - Available debater providers are shuffled and zipped to roles at the start of each run
 - If fewer than 4 providers are configured, roles are assigned by priority order; lowest-priority roles are dropped until roles match available debaters
 - Role-to-provider assignments are logged and included in the final report
-- The synthesizer is always the most capable available cloud provider; it participates via a separate call and is never assigned a debater role. Anthropic can act as both debater and synthesizer in the same session — they are distinct invocations with distinct system prompts.
+- The synthesizer is always the most capable available cloud provider; it participates via a separate call and is never assigned a debater role. Anthropic can act as both debater and synthesizer in the same session - they are distinct invocations with distinct system prompts.
 
-### 7.4 Round 1 — Independent Analysis
+### 7.4 Round 1 - Independent Analysis
 - Each debater receives: the chosen seed idea + its assigned role system prompt
 - All debaters run in parallel
 - Each produces a structured response: position, key arguments (3–5), confidence score
 
-### 7.5 Debate Rounds — Reaction
+### 7.5 Debate Rounds - Reaction
 - Each debater receives: its previous round response + all other debaters' previous round responses
-- **Debater identities are anonymized** — other models' responses are labeled `Debater A`, `Debater B`, `Debater C`, not by provider or model name
+- **Debater identities are anonymized** - other models' responses are labeled `Debater A`, `Debater B`, `Debater C`, not by provider or model name
 - Anonymization prevents deference bias (e.g., Claude softening its critique because it knows it's critiquing GPT-4)
-- Role labels (Optimist, Critic, etc.) are preserved — only the provider/model identity is hidden
+- Role labels (Optimist, Critic, etc.) are preserved - only the provider/model identity is hidden
 - The synthesizer receives the full attribution map (role → provider → model) and is the only participant that sees it
 - Debater must respond to at least one specific point made by another role
 - All debaters run in parallel
@@ -152,59 +152,59 @@ Two modes are supported. The debate loop is identical in both — the only diffe
 
 The debate runs until the synthesizer decides it is over, subject to a maximum round ceiling.
 
-**Selected: Option 3 — Synthesizer decides**
+**Selected: Option 3 - Synthesizer decides**
 
 After each round, the synthesizer reads all debater responses and returns one of two signals:
-- `continue` — new arguments are still emerging, positions are still shifting
-- `done` — positions have stabilized, no substantively new arguments in the last round
+- `continue` - new arguments are still emerging, positions are still shifting
+- `done` - positions have stabilized, no substantively new arguments in the last round
 
-The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. The exit check is skipped after Round 1 (independent analysis — no reactions yet) and Round 2 (first reaction — one exchange is not enough to judge convergence). The first check runs after Round 3 — minimum 2 reaction rounds must complete before the synthesizer can signal done. This adds one synthesizer API call per qualifying round but produces the most honest exit — a judge watching a debate knows when it is over.
+The session exits when the synthesizer signals `done` or `--rounds` (default: 3) is reached, whichever comes first. The exit check is skipped after Round 1 (independent analysis - no reactions yet) and Round 2 (first reaction - one exchange is not enough to judge convergence). The first check runs after Round 3 - minimum 2 reaction rounds must complete before the synthesizer can signal done. This adds one synthesizer API call per qualifying round but produces the most honest exit - a judge watching a debate knows when it is over.
 
 **Options considered and rejected:**
 
 | Option | Mechanism | Rejected because |
 |--------|-----------|-----------------|
-| 1 — Fixed rounds | Always run exactly N rounds | Arbitrary — models may settle early or still be diverging at round N |
-| 2 — Consensus threshold | Exit when confidence score spread between debaters falls below a threshold | Models will game confidence scores if not prompted carefully; fragile |
-| 3 — Synthesizer decides | Synthesizer signals `continue` or `done` after each round | **Selected** |
-| 4 — No new arguments | Each debater lists new points vs prior round; exit if none | Structural and cheap, but debaters may restate old points in new words and appear novel |
+| 1 - Fixed rounds | Always run exactly N rounds | Arbitrary - models may settle early or still be diverging at round N |
+| 2 - Consensus threshold | Exit when confidence score spread between debaters falls below a threshold | Models will game confidence scores if not prompted carefully; fragile |
+| 3 - Synthesizer decides | Synthesizer signals `continue` or `done` after each round | **Selected** |
+| 4 - No new arguments | Each debater lists new points vs prior round; exit if none | Structural and cheap, but debaters may restate old points in new words and appear novel |
 
 ### 7.7 Market Verification
 
-Runs after the final debate round, before synthesis. Both sources are optional — if neither is configured, `market_openness` is `null` and the step is skipped entirely.
+Runs after the final debate round, before synthesis. Both sources are optional - if neither is configured, `market_openness` is `null` and the step is skipped entirely.
 
 **Why keyword search alone is not enough:** the idea we generate may use different terminology than existing projects. "Gig worker credit scoring" and "freelancer income underwriting" describe the same concept with zero keyword overlap. Search queries must be context-aware.
 
-**Step 1 — Query generation (synthesizer)**
+**Step 1 - Query generation (synthesizer)**
 - The synthesizer receives the final seed idea and generates 4 semantically distinct search queries
 - Each query captures the same concept from a different angle (different vocabulary, different framing)
 - Queries are generated once and reused across both search sources
 
-**Step 2 — GitHub search (primary)**
+**Step 2 - GitHub search (primary)**
 - Answers: "has someone already built this as open source?"
 - All 4 queries run against the GitHub repository search API in parallel
 - Results include: repo name, description, stars, URL, last updated
-- No additional API key required — uses the same GitHub token as the `gh` CLI
+- No additional API key required - uses the same GitHub token as the `gh` CLI
 - Top results (deduplicated by URL) passed to synthesizer
 
-**Step 3 — Tavily web search (secondary)**
+**Step 3 - Tavily web search (secondary)**
 - Answers: "is someone selling this as a product?"
 - All 4 queries run against Tavily in parallel
 - Results include: title, URL, snippet
-- Requires `TAVILY_API_KEY` — skipped if not configured
+- Requires `TAVILY_API_KEY` - skipped if not configured
 
-**Step 4 — Synthesizer interprets results**
+**Step 4 - Synthesizer interprets results**
 - Receives: seed idea, GitHub results, Tavily results (whichever ran)
 - Produces `market_openness` (1–10, higher = more open) and `competitor_hits` list
-- Note: synthesizer still interprets the results — this is search-assisted, not search-determined
+- Note: synthesizer still interprets the results - this is search-assisted, not search-determined
 
-**Step 5 — Act on the score**
+**Step 5 - Act on the score**
 
 | market_openness | Label | Behavior |
 |-----------------|-------|----------|
-| 7–10 | open space | Proceed to synthesis automatically — idea is novel enough |
-| 4–6 | moderate competition | Pause session — show findings and prompt user to choose |
-| 1–3 | crowded | Auto-trigger reframe round — council finds the gap without user input |
+| 7–10 | open space | Proceed to synthesis automatically - idea is novel enough |
+| 4–6 | moderate competition | Pause session - show findings and prompt user to choose |
+| 1–3 | crowded | Auto-trigger reframe round - council finds the gap without user input |
 
 **User prompt for score 4–6:**
 ```
@@ -214,16 +214,16 @@ Market verification found moderate competition (score: X/10).
     - <url>
     - <url>
 
-  [1] Proceed  — synthesize this idea as-is
-  [2] Reframe  — council finds the gap in the market
-  [3] Abandon  — exit session
+  [1] Proceed  - synthesize this idea as-is
+  [2] Reframe  - council finds the gap in the market
+  [3] Abandon  - exit session
 ```
 
 **Reframe round (triggered by score 1–3 or user selecting [2]):**
 - Roles are reshuffled across providers (fresh rotation) so each model approaches the gap question from a new stance
 - The synthesizer generates a gap question: the original seed idea + competitor list + "These already exist. What angle is missing? What did none of them solve?"
 - A 2-line preview of the gap question is shown in the terminal after the new council lineup is printed
-- Council runs one additional round in parallel as a fresh independent analysis (`previous_responses=None` — no prior reactions carried in)
+- Council runs one additional round in parallel as a fresh independent analysis (`previous_responses=None` - no prior reactions carried in)
 - No further exit-condition check runs on the reframe round
 - The reframed direction produced by the council becomes the new seed
 - Session continues to synthesis with the reframe seed and all prior rounds preserved in the report
@@ -231,11 +231,11 @@ Market verification found moderate competition (score: X/10).
 ### 7.8 Synthesis
 - The synthesizer receives: seed idea, all debate rounds, role assignments, market verification results (if available)
 - Produces a structured final report (see Section 8)
-- Synthesizer is not a debater and does not argue — it judges
+- Synthesizer is not a debater and does not argue - it judges
 
 ### 7.9 Output
 
-**Progress display** — the terminal shows a live spinner with the current phase description and a rolling elapsed timer. The display updates in place at every phase boundary so the user knows what is happening during long API calls. No timestamped print lines — the elapsed column is always visible and updates automatically.
+**Progress display** - the terminal shows a live spinner with the current phase description and a rolling elapsed timer. The display updates in place at every phase boundary so the user knows what is happening during long API calls. No timestamped print lines - the elapsed column is always visible and updates automatically.
 
 Phases reported:
 - Checking available providers (debater list + synthesizer)
@@ -246,13 +246,13 @@ Phases reported:
 - Market verification start, score, and gap (if found)
 - Final report generation
 
-**`--verbose` flag** — additionally prints each debater's position after every round, before the final report panel.
+**`--verbose` flag** - additionally prints each debater's position after every round, before the final report panel.
 
-**Final report panel** — Rich-formatted verdict, opportunity score, strongest argument, fatal flaw, kill conditions, what must be true.
+**Final report panel** - Rich-formatted verdict, opportunity score, strongest argument, fatal flaw, kill conditions, what must be true.
 
-**Gap display** — if market verification identifies a remaining gap in the market, it is highlighted in green in the terminal and included in the JSON report.
+**Gap display** - if market verification identifies a remaining gap in the market, it is highlighted in green in the terminal and included in the JSON report.
 
-**JSON file** — every session is saved to `output/<timestamp>_<domain_slug>.json` regardless of outcome.
+**JSON file** - every session is saved to `output/<timestamp>_<domain_slug>.json` regardless of outcome.
 
 ---
 
@@ -266,8 +266,8 @@ FinalReport
 ├── role_assignments    (dict: role → provider/model)
 ├── rejected_seeds      (list[str])
 ├── seed_mode           (str: "generated" | "user_provided")
-├── exclusions          (list[str] | null — values passed via --exclude)
-├── user_context        (str | null — value passed via --context)
+├── exclusions          (list[str] | null - values passed via --exclude)
+├── user_context        (str | null - value passed via --context)
 ├── rounds              (list[DebateRound])  ← variable length, 1 to max_rounds
 ├── rounds_completed    (int)
 ├── exit_reason         (str: "synthesizer_done" | "max_rounds_reached")
@@ -278,16 +278,16 @@ FinalReport
 ├── kill_conditions     (list[str])
 ├── what_must_be_true   (list[str])
 ├── market
-│   ├── market_openness     (int 1–10 | null if search skipped — higher = more open space)
-│   ├── remaining_gap       (str | null — gap in the market identified by synthesizer, if any)
-│   ├── github_hits         (list[str] — repo URLs from GitHub search)
-│   ├── web_hits            (list[str] — URLs from Tavily web search)
-│   ├── competitor_hits     (list[str] — combined deduplicated URLs from all sources)
-│   └── skipped             (bool — true if neither search source was configured)
-├── reframe_triggered   (bool — true if reframe round ran)
-├── reframe_seed        (str | null — reframe prompt passed to council, if triggered)
-├── user_choice         (str | null — "proceed" | "reframe" | "abandon", set when score 4–6)
-└── provider_events     (list[str] — fallback/skip/repair events during session)
+│   ├── market_openness     (int 1–10 | null if search skipped - higher = more open space)
+│   ├── remaining_gap       (str | null - gap in the market identified by synthesizer, if any)
+│   ├── github_hits         (list[str] - repo URLs from GitHub search)
+│   ├── web_hits            (list[str] - URLs from Tavily web search)
+│   ├── competitor_hits     (list[str] - combined deduplicated URLs from all sources)
+│   └── skipped             (bool - true if neither search source was configured)
+├── reframe_triggered   (bool - true if reframe round ran)
+├── reframe_seed        (str | null - reframe prompt passed to council, if triggered)
+├── user_choice         (str | null - "proceed" | "reframe" | "abandon", set when score 4–6)
+└── provider_events     (list[str] - fallback/skip/repair events during session)
 
 DebateRound
 ├── round_number        (int)
@@ -327,11 +327,11 @@ Every provider implements a single method:
 def call(self, system: str, user: str) -> str
 ```
 
-The orchestration layer never calls provider APIs directly — always through this interface.
+The orchestration layer never calls provider APIs directly - always through this interface.
 
 ### 9.3 Provider Registry
 
-Providers are declared in `.env`. Active providers are loaded at startup. A provider with a missing API key or unreachable endpoint is skipped with a warning — the session continues with remaining providers.
+Providers are declared in `.env`. Active providers are loaded at startup. A provider with a missing API key or unreachable endpoint is skipped with a warning - the session continues with remaining providers.
 
 ### 9.4 Automatic Fallback
 
@@ -357,7 +357,7 @@ Fallback behavior:
 
 Each role prompt must:
 
-- Force a **specific epistemic stance** — not just "be critical", but "your job is to find the single assumption that, if wrong, kills this idea"
+- Force a **specific epistemic stance** - not just "be critical", but "your job is to find the single assumption that, if wrong, kills this idea"
 - Prohibit hedging language that dilutes the role (e.g. "while there are pros and cons...")
 - Require **concrete arguments**, not generalities
 - Require a **confidence score** so the synthesizer can weight responses
@@ -394,10 +394,10 @@ src/idea_council/
 ## 12. CLI Interface
 
 ```bash
-# Mode A — system generates the seed
+# Mode A - system generates the seed
 uv run idea-council --domain "developer tools"
 
-# Mode B — user provides the seed
+# Mode B - user provides the seed
 uv run idea-council --domain "fintech" --seed "a credit score API for gig workers"
 
 # Exclude known projects from consideration
@@ -425,11 +425,11 @@ uv run idea-council --domain "fintech" --rounds 5
 ## 13. Configuration (.env)
 
 ```env
-# Anthropic (required — used as synthesizer and debater)
+# Anthropic (required - used as synthesizer and debater)
 ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-sonnet-4-6
 
-# Ollama (local — no key required)
+# Ollama (local - no key required)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODELS=qwen3.5:35b,qwen2.5:7b
 
@@ -441,11 +441,11 @@ GOOGLE_API_KEY=
 GOOGLE_MODEL=gemini-2.0-flash
 
 # Market verification
-# GitHub search uses the gh CLI token — no separate key needed
+# GitHub search uses the gh CLI token - no separate key needed
 GITHUB_SEARCH_ENABLED=true
 GITHUB_SEARCH_MAX_RESULTS=10
 
-# Tavily web search (optional — skipped if not set)
+# Tavily web search (optional - skipped if not set)
 TAVILY_API_KEY=
 
 # Session
@@ -483,7 +483,7 @@ LOG_LEVEL=INFO
 
 ## 16. Degraded Modes
 
-Defines expected behavior when the session runs with fewer than ideal resources. These cases must be handled explicitly in code — not improvised at runtime.
+Defines expected behavior when the session runs with fewer than ideal resources. These cases must be handled explicitly in code - not improvised at runtime.
 
 | Condition | Behavior |
 |-----------|----------|
@@ -491,7 +491,7 @@ Defines expected behavior when the session runs with fewer than ideal resources.
 | 2 debaters available | Session runs with 2 roles; Domain Expert and Devil's Advocate are dropped |
 | 3 debaters available | Session runs with 3 roles; lowest-priority role dropped (default configuration) |
 | Ollama unreachable | Ollama providers are skipped at startup with a warning; session continues with cloud providers only |
-| Synthesizer provider fails | Session aborts — synthesis is not optional. No fallback synthesizer in v1. |
+| Synthesizer provider fails | Session aborts - synthesis is not optional. No fallback synthesizer in v1. |
 | Tavily unconfigured | Tavily web search is skipped; GitHub search still runs if enabled |
 | GitHub search disabled | GitHub search is skipped; Tavily still runs if configured |
 | Both search sources unavailable | Market verification step skipped entirely; `market_openness`, `remaining_gap`, `github_hits`, `web_hits`, `competitor_hits` are all `null` |
@@ -501,9 +501,9 @@ Defines expected behavior when the session runs with fewer than ideal resources.
 | Max rounds reached before `done` signal | Session exits with `exit_reason: "max_rounds_reached"`; synthesis runs on available rounds |
 
 **Role priority order** (for dropping when debaters < 4):
-1. Domain Expert — dropped first
-2. Devil's Advocate — dropped second
-3. Critic and Optimist — always present (minimum viable debate)
+1. Domain Expert - dropped first
+2. Devil's Advocate - dropped second
+3. Critic and Optimist - always present (minimum viable debate)
 
 ---
 
@@ -516,6 +516,6 @@ The v1 is complete when:
 3. The final report JSON is written to `output/`
 4. `--verbose` shows all per-role round responses
 5. All tests pass with mocked providers and mocked search API
-6. A new provider can be added by adding an adapter class and a config entry — no other changes required
+6. A new provider can be added by adding an adapter class and a config entry - no other changes required
 7. When a provider fails mid-session, fallback kicks in and the session completes
 8. When `TAVILY_API_KEY` is set, the final report includes `market_openness` and `competitor_hits`

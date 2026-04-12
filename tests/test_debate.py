@@ -199,7 +199,7 @@ def test_run_round_uses_fallback_when_primary_fails():
 
 # --- Reaction round parsing ---
 
-SAMPLE_REACTION_NO_NEW_ARGS = """POSITION: My position is unchanged — the data access risk remains the primary blocker.
+SAMPLE_REACTION_NO_NEW_ARGS = """POSITION: My position is unchanged - the data access risk remains the primary blocker.
 RESPONSE TO OTHERS:
 - Debater A argues user demand is strong, but demand is irrelevant if gig platforms refuse to share data.
 NEW ARGUMENTS:
@@ -209,7 +209,7 @@ CONFIDENCE: 8"""
 
 
 def test_reaction_round_with_no_new_arguments_does_not_trigger_repair():
-    """A reaction response that skips NEW ARGUMENTS is valid — no repair event should fire."""
+    """A reaction response that skips NEW ARGUMENTS is valid - no repair event should fire."""
     debaters = {
         "optimist": MockAdapter("anthropic", "claude", SAMPLE_REACTION_NO_NEW_ARGS),
         "critic": MockAdapter("ollama", "qwen", SAMPLE_REACTION_NO_NEW_ARGS),
@@ -245,7 +245,7 @@ def test_reaction_round_with_no_new_arguments_does_not_trigger_repair():
 
 
 def test_first_round_missing_arguments_still_triggers_repair():
-    """Round 1 is not a reaction round — missing arguments must still fire repair."""
+    """Round 1 is not a reaction round - missing arguments must still fire repair."""
     no_args_response = "POSITION: This has potential.\nCONFIDENCE: 6"
     debaters = {
         "optimist": MockAdapter("anthropic", "claude", no_args_response),

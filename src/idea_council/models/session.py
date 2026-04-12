@@ -58,5 +58,5 @@ class FinalReport:
     reframe_seed: Optional[str]
     user_choice: Optional[
         str
-    ]  # "proceed", "reframe", or "abandon" — set when score 4-6
+    ]  # "proceed", "reframe", or "abandon" - set when score 4-6
     provider_events: list[str]  # fallback, skip, and repair events

@@ -7,20 +7,20 @@ load_dotenv()
 
 @dataclass
 class Settings:
-    # Anthropic — required
+    # Anthropic - required
     anthropic_api_key: str
     anthropic_model: str
     anthropic_fallback_model: str
 
-    # Ollama — optional, local
+    # Ollama - optional, local
     ollama_base_url: str
     ollama_models: list[str]
 
-    # OpenAI — optional
+    # OpenAI - optional
     openai_api_key: str
     openai_model: str
 
-    # Google — optional
+    # Google - optional
     google_api_key: str
     google_model: str
 
