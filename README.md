@@ -1,6 +1,6 @@
 # idea-council
 
-A local-first CLI that surfaces the full argument landscape for a product idea - fast, before you spend time talking to humans who will. Every session produces an **inspectable JSON transcript** - version it in git, pipe it through `jq`, diff runs side-by-side, or feed it into downstream tooling. No SaaS dependency. No data sent to third parties.
+A local-first CLI that surfaces the full argument landscape for a product idea - fast, before you spend time talking to humans who will. Every session produces an **inspectable JSON transcript** - version it in git, pipe it through `jq`, diff runs side-by-side, or feed it into downstream tooling. No SaaS dependency; data is sent only to the providers you configure.
 
 Models argue from rotating assigned roles - Optimist, Critic, Devil's Advocate, Domain Expert - and a synthesizer produces a structured verdict with optional market-search grounding. The goal is enumerable, named arguments you can act on, not a substitute for expert feedback.
 
@@ -10,7 +10,7 @@ Models argue from rotating assigned roles - Optimist, Critic, Devil's Advocate, 
 
 When you ask a single model to brainstorm and critique an idea, the critique is shallow. It's the same mind talking to itself.
 
-Real ideation benefits from genuine disagreement between models with different training data, sizes, and tendencies. `idea-council` assigns different roles to different providers, anonymizes their identities during reaction rounds to prevent deference bias, and produces a structured verdict you can act on.
+Real ideation benefits from structured disagreement between models with different training data, sizes, and tendencies. `idea-council` assigns different roles to different providers, anonymizes their identities during reaction rounds to prevent deference bias, and produces a structured verdict you can act on.
 
 ---
 
