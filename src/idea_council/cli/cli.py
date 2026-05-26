@@ -155,22 +155,23 @@ def _print_final_report(report):
     verdict_color = verdict_colors.get(report.verdict, "white")
 
     opp_label = _opportunity_label(report.opportunity_score)
+    console.print("\n──────── Final Report ────────\n")
+    console.print(f"[bold]Idea:[/bold]\n{report.seed_idea}\n")
     console.print(
-        Panel(
-            f"[bold]Idea:[/bold]\n{report.seed_idea}\n\n"
-            f"[bold {verdict_color}]Verdict: {report.verdict.upper()}[/bold {verdict_color}]\n\n"
-            f"[bold]Opportunity Score:[/bold] {report.opportunity_score}/10 ({opp_label})\n\n"
-            f"[bold]Strongest Argument:[/bold]\n{report.strongest_argument}\n\n"
-            f"[bold]Fatal Flaw:[/bold]\n{report.fatal_flaw}\n\n"
-            f"[bold]Kill Conditions:[/bold]\n"
-            + "\n".join(f"• {c}" for c in report.kill_conditions)
-            + "\n\n[bold]What Must Be True:[/bold]\n"
-            + "\n".join(f"• {c}" for c in report.what_must_be_true),
-            title="[bold]Final Report[/bold]",
-            border_style=verdict_color,
-            box=box.DOUBLE,
-        )
+        f"[bold {verdict_color}]Verdict: {report.verdict.upper()}[/bold {verdict_color}]\n"
     )
+    console.print(
+        f"[bold]Opportunity Score:[/bold] {report.opportunity_score}/10 ({opp_label})\n"
+    )
+    console.print(f"[bold]Strongest Argument:[/bold]\n{report.strongest_argument}\n")
+    console.print(f"[bold]Fatal Flaw:[/bold]\n{report.fatal_flaw}\n")
+    console.print("[bold]Kill Conditions:[/bold]")
+    for c in report.kill_conditions:
+        console.print(f"• {c}")
+    console.print("\n[bold]What Must Be True:[/bold]")
+    for c in report.what_must_be_true:
+        console.print(f"• {c}")
+    console.print("\n──────────────────────────────")
 
     if report.reframe_triggered:
         console.print(
